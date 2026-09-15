@@ -312,7 +312,7 @@
     // The scanned value is sent to the server, which does the real check.
     function looksLikeShopCode(v){
       const s = String(v || '').trim();
-      return /^HAGGERTY-/i.test(s) || /^https?:\/\/liambuilds\.github\.io\/shop-inventory\//i.test(s);
+      return /^HAGGERTY-/i.test(s) || /^https?:\/\/(liambuilds|haggertybuilds)\.github\.io\/shop-inventory\//i.test(s);
     }
     function haversineMeters(lat1, lon1, lat2, lon2){
       const R = 6371000;

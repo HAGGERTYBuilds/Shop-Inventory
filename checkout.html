@@ -663,7 +663,7 @@
     }
     function looksLikeShopCode(v){
       const t = String(v || '').trim();
-      return /^HAGGERTY-/i.test(t) || /^https?:\/\/liambuilds\.github\.io\/shop-inventory\//i.test(t);
+      return /^HAGGERTY-/i.test(t) || /^https?:\/\/(liambuilds|haggertybuilds)\.github\.io\/shop-inventory\//i.test(t);
     }
     function setPresence(p){
       presence = p;

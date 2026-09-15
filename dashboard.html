@@ -685,7 +685,7 @@
       const card = document.createElement('div');
       card.className = 'pendCard';
       const approveUrl = 'https://haggertybuilds.app.n8n.cloud/webhook/alice-decision?pending=' + encodeURIComponent(p.pendingId) + '&action=approve';
-      const denyUrl = 'https://liambuilds.github.io/Shop-Inventory/deny.html?pending=' + encodeURIComponent(p.pendingId);
+      const denyUrl = new URL('deny.html?pending=' + encodeURIComponent(p.pendingId), location.href).href;
       card.innerHTML = ''
         + '<div class="pTop"><div class="pName">' + esc(p.person) + '</div><div class="pDate">' + esc(p.requestedAt) + '</div></div>'
         + '<div class="pItem"><b>' + esc(p.item) + '</b> (' + esc(p.category) + ')' + (p.destination ? ' to ' + esc(p.destination) : '') + '</div>'
