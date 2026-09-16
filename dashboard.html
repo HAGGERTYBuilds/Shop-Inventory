@@ -54,6 +54,29 @@
   .miniStat b{color:var(--paper); font-weight:700; font-size:16px; margin-right:4px;}
   .miniStat.hot b{color:var(--danger);}
   /* Search + filter bar */
+  /* Admin editing (Ahren, with ?key=) */
+  .editBtn{appearance:none; background:transparent; border:1.5px solid var(--gray); color:var(--paper); border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap;}
+  .editBtn:hover{border-color:var(--orange);}
+  .addBtn{appearance:none; background:var(--orange); border:0; color:var(--ink); border-radius:8px; padding:9px 14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; margin-left:auto;}
+  .adminNote{color:var(--muted); font-size:13px; margin:14px 0 0;}
+  .adminNote a{color:var(--orange);}
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:80; display:none; align-items:center; justify-content:center; padding:20px;}
+  .modal.show{display:flex;}
+  .modal .box{background:var(--bg); border:1.5px solid var(--line); border-radius:16px; padding:24px; max-width:460px; width:100%; max-height:92vh; overflow:auto;}
+  .modal h3{font-family:Georgia,serif; font-size:20px; margin:0 0 4px;}
+  .modal .who{color:var(--muted); font-size:14px; margin:0 0 10px;}
+  .modal label{display:block; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px;}
+  .modal input,.modal select,.modal textarea{width:100%; box-sizing:border-box; background:var(--card); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; font-size:16px; font-family:inherit;}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none; border-color:var(--orange);}
+  .modal .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .modal .buttons{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+  .modal .go{appearance:none; border:0; border-radius:12px; padding:14px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; background:var(--orange); color:var(--ink);}
+  .modal .go:disabled{opacity:.5;}
+  .modal .cancel{appearance:none; border:1.5px solid var(--gray); border-radius:12px; padding:14px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; background:transparent; color:var(--paper);}
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--card); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:12px 18px; font-size:14px; opacity:0; transition:.2s; z-index:90; pointer-events:none; max-width:92%;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.ok{border-color:var(--green);} .toast.bad{border-color:var(--red);}
+  .adjLog td{font-size:13px;}
   .searchBar{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; align-items:center;}
   .searchBar input{flex:1; min-width:220px; background:var(--card); color:var(--paper); border:1.5px solid var(--line); border-radius:10px; padding:12px 14px; font-size:15px; font-family:inherit;}
   .searchBar input:focus{outline:none; border-color:var(--orange);}
@@ -98,29 +121,6 @@
   .loading{text-align:center; color:var(--muted); padding:60px 20px;}
   .refreshInfo{color:var(--muted); font-size:12px; text-align:center; padding:20px 0;}
   .refreshInfo a{color:var(--orange);}
-  /* Alice edit controls */
-  .rowBtn{appearance:none; background:transparent; border:1.5px solid var(--line); color:var(--paper); border-radius:8px; padding:6px 12px; font-size:12px; font-family:inherit; font-weight:600; cursor:pointer;}
-  .rowBtn:hover{border-color:var(--orange); color:var(--orange);}
-  .modalBack{position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;}
-  .modalCard{background:var(--card); border:1.5px solid var(--line); border-radius:14px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto; padding:22px;}
-  .modalCard h3{font-family:Georgia,serif; font-size:19px; margin:0 0 2px;}
-  .modalCard .mSub{color:var(--muted); font-size:13px; margin-bottom:18px;}
-  .modeRow{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
-  .modeRow .chip{flex:1; min-width:96px; text-align:center;}
-  .field{margin-bottom:14px;}
-  .field label{display:block; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; font-weight:600; margin-bottom:6px;}
-  .field input, .field select, .field textarea{width:100%; background:var(--bg); color:var(--paper); border:1.5px solid var(--line); border-radius:10px; padding:11px 13px; font-size:15px; font-family:inherit;}
-  .field textarea{min-height:76px; resize:vertical;}
-  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--orange);}
-  .modalActions{display:flex; gap:10px; margin-top:20px;}
-  .mBtn{flex:1; appearance:none; border:0; border-radius:9px; padding:13px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer;}
-  .mSave{background:var(--orange); color:var(--ink);}
-  .mSave:disabled{opacity:.55; cursor:default;}
-  .mCancel{background:transparent; border:1.5px solid var(--line); color:var(--paper);}
-  .mErr{color:#e08a80; font-size:13px; margin-top:12px; min-height:17px;}
-  .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:var(--card); border:1.5px solid var(--green); color:var(--paper); padding:13px 20px; border-radius:10px; font-size:14px; z-index:60; max-width:92vw;}
-  .toast.bad{border-color:var(--danger);}
-  .overrideTag{display:inline-block; margin-left:6px; padding:2px 6px; border-radius:5px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:rgba(246,137,34,.20); color:var(--orange);}
 </style>
 </head>
 <body>
@@ -146,15 +146,71 @@
       <div class="refreshInfo">Auto-refreshes every 5 minutes &middot; <a href="#" id="refreshNow">Refresh now</a></div>
     </div>
   </main>
+  <div class="toast" id="toast"></div>
+  <div class="modal" id="editModal">
+    <div class="box">
+      <h3 id="emTitle">Edit checkout</h3>
+      <p class="who" id="emWho"></p>
+      <label for="emPerson">Checked out to</label>
+      <select id="emPerson"></select>
+      <div class="row2">
+        <div><label for="emDue">Due back</label><input id="emDue" type="date"></div>
+        <div><label for="emDest">Where</label><input id="emDest" autocomplete="off"></div>
+      </div>
+      <label for="emNotes">Notes</label>
+      <textarea id="emNotes" rows="2"></textarea>
+      <label for="emReason">Reason for the change <span style="text-transform:none; font-weight:400;">(goes in the log)</span></label>
+      <input id="emReason" placeholder="e.g. wrong name picked at checkout" autocomplete="off">
+      <div class="buttons">
+        <button type="button" class="go" id="emGo">Save changes</button>
+        <button type="button" class="cancel" id="emCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="addModal">
+    <div class="box">
+      <h3>Add a checkout by hand</h3>
+      <p class="who">For something that left the shop without going through the app. No location check; it gets logged as a manual entry.</p>
+      <label for="amPerson">Checked out to</label>
+      <select id="amPerson"></select>
+      <label for="amItem">Item</label>
+      <input id="amItem" list="amItems" placeholder="Start typing the item name" autocomplete="off">
+      <datalist id="amItems"></datalist>
+      <div class="row2">
+        <div><label for="amOut">Checked out on</label><input id="amOut" type="date"></div>
+        <div><label for="amDue">Due back</label><input id="amDue" type="date"></div>
+      </div>
+      <label for="amDest">Where</label>
+      <input id="amDest" placeholder="Job name or number" autocomplete="off">
+      <label for="amNotes">Notes <span style="text-transform:none; font-weight:400;">(optional)</span></label>
+      <textarea id="amNotes" rows="2"></textarea>
+      <label for="amReason">Why it's being added by hand</label>
+      <input id="amReason" placeholder="e.g. checkout never saved on the phone" autocomplete="off">
+      <div class="buttons">
+        <button type="button" class="go" id="amGo">Add checkout</button>
+        <button type="button" class="cancel" id="amCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
   <script>
     const DATA_URL = "https://haggertybuilds.app.n8n.cloud/webhook/sb-dashboard-data";
-    const OVERRIDE_URL = "https://haggertybuilds.app.n8n.cloud/webhook/alice-override";
     function getParam(name){
       const params = new URLSearchParams(window.location.search);
       return (params.get(name) || '').toLowerCase().trim();
     }
     const user = getParam('u');
     const view = getParam('view') || 'home';
+    // ---- Admin editing: open with &key=... once; the key is remembered on this phone/browser ----
+    const SUPABASE_URL = "https://tdflgfuqjnwctadsjizz.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_w9xkQQE07152NL8faFVTwQ_LSJ9Hf_d";
+    const SB_H = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+    const ADMIN_KEY_STORE = 'haggerty_dashboard_admin_key';
+    let ADMIN_KEY = (new URLSearchParams(window.location.search).get('key') || '').trim();
+    try { if (ADMIN_KEY) localStorage.setItem(ADMIN_KEY_STORE, ADMIN_KEY); else ADMIN_KEY = localStorage.getItem(ADMIN_KEY_STORE) || ''; } catch(e) {}
+    const ADMIN = user === 'ahren' && !!ADMIN_KEY;
+    const EDITOR = user === 'ahren' ? 'Ahren S.' : (user.charAt(0).toUpperCase() + user.slice(1));
+    let toastT;
+    function toast(msg, kind){ const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show' + (kind ? ' ' + kind : ''); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
     // Access gate
     if (user !== 'ahren' && user !== 'alice'){
       document.getElementById('loading').style.display = 'none';
@@ -284,7 +340,6 @@
     function renderEquipmentPage(body){
       document.getElementById('viewTitle').textContent = 'Mitigation Equipment';
       const units = currentData.mitUnits || [];
-      const canEdit = (user === 'alice');
       // Stats bar
       const s = currentData.stats;
       const stats = document.createElement('div');
@@ -334,16 +389,6 @@
       const tableWrap = document.createElement('div');
       tableWrap.id = 'eqTable';
       body.appendChild(tableWrap);
-      // One delegated listener for every Edit button, now and after each re-filter
-      if (canEdit){
-        tableWrap.addEventListener('click', (e) => {
-          const btn = e.target.closest('.rowBtn');
-          if (!btn) return;
-          const code = btn.getAttribute('data-code');
-          const unit = units.find(u => String(u.itemId) === code);
-          if (unit) openEditModal(unit);
-        });
-      }
       function refreshEquipment(){
         // Update active chip state
         document.querySelectorAll('#eqLoc .chip').forEach(c => c.classList.toggle('active', c.textContent === (filterState.location === 'all' ? 'All locations' : filterState.location)));
@@ -363,146 +408,13 @@
           else if (type === 'van') badge = '<span class="badge b-van">Van</span>';
           else if (type === 'site') badge = '<span class="badge b-site">Site</span>';
           else badge = '<span class="badge b-shop">' + esc(u.locationType) + '</span>';
-          const editCell = canEdit ? '<td><button class="rowBtn" data-code="' + esc(u.itemId) + '">Edit</button></td>' : '';
-          return '<tr><td><b>' + esc(u.itemId) + '</b></td><td>' + esc(u.item || '-') + '</td><td>' + esc(u.category) + '</td><td>' + badge + ' ' + esc(u.location || '-') + '</td><td>' + esc(u.heldBy || '-') + '</td>' + editCell + '</tr>';
+          return '<tr><td><b>' + esc(u.itemId) + '</b></td><td>' + esc(u.item || '-') + '</td><td>' + esc(u.category) + '</td><td>' + badge + ' ' + esc(u.location || '-') + '</td><td>' + esc(u.heldBy || '-') + '</td></tr>';
         }).join('');
-        const editHead = canEdit ? '<th></th>' : '';
         const eqScrollClass = filtered.length > 12 ? ' scroll' : '';
         const eqScrollHint = filtered.length > 12 ? '<div class="scrollHint">Scroll to see more &darr;</div>' : '';
-        document.getElementById('eqTable').innerHTML = '<div class="tableWrap' + eqScrollClass + '"><table><thead><tr><th>ID</th><th>Item</th><th>Category</th><th>Where</th><th>Held by</th>' + editHead + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + eqScrollHint;
+        document.getElementById('eqTable').innerHTML = '<div class="tableWrap' + eqScrollClass + '"><table><thead><tr><th>ID</th><th>Item</th><th>Category</th><th>Where</th><th>Held by</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + eqScrollHint;
       }
       refreshEquipment();
-    }
-    // ===== ALICE EDIT MODAL =====
-    function openEditModal(unit){
-      let mode = 'checkin';
-      const back = document.createElement('div');
-      back.className = 'modalBack';
-      back.innerHTML = ''
-        + '<div class="modalCard" role="dialog" aria-modal="true">'
-        + '<h3>' + esc(unit.itemId) + '</h3>'
-        + '<div class="mSub">' + esc(unit.item || '') + ' &middot; currently ' + esc(unit.location || 'Shop')
-        + (unit.heldBy ? ' with ' + esc(unit.heldBy) : '') + '</div>'
-        + '<div class="modeRow">'
-        + '<button class="chip active" data-mode="checkin">Check in</button>'
-        + '<button class="chip" data-mode="relocate">Fix location</button>'
-        + '<button class="chip" data-mode="note">Add note</button>'
-        + '</div>'
-        + '<div id="mFields"></div>'
-        + '<div class="mErr" id="mErr"></div>'
-        + '<div class="modalActions">'
-        + '<button class="mBtn mCancel" id="mCancel">Cancel</button>'
-        + '<button class="mBtn mSave" id="mSave">Save</button>'
-        + '</div>'
-        + '</div>';
-      document.body.appendChild(back);
-      const fields = back.querySelector('#mFields');
-      const errEl = back.querySelector('#mErr');
-      function drawFields(){
-        if (mode === 'checkin'){
-          fields.innerHTML = ''
-            + '<p style="color:var(--muted);font-size:13px;margin:0 0 14px;">Records this unit back at the shop and clears whoever was holding it.</p>'
-            + '<div class="field"><label>Note (optional)</label><textarea id="fNote" placeholder="Why you are checking it in by hand"></textarea></div>';
-        } else if (mode === 'relocate'){
-          fields.innerHTML = ''
-            + '<div class="field"><label>Where is it</label><select id="fType"><option value="Shop">Shop</option><option value="Van">Van</option><option value="Site">Site</option></select></div>'
-            + '<div class="field" id="fWhereWrap"><label>Address or job name</label><input id="fWhere" type="text" placeholder="4009 Kenny Dr" autocomplete="off"></div>'
-            + '<div class="field" id="fHeldWrap"><label>Held by</label><input id="fHeld" type="text" placeholder="Freddie M." autocomplete="off"></div>'
-            + '<div class="field"><label>Note (optional)</label><textarea id="fNote" placeholder="Why the record was wrong"></textarea></div>';
-          const typeSel = fields.querySelector('#fType');
-          const sync = () => {
-            const t = typeSel.value;
-            fields.querySelector('#fWhereWrap').style.display = (t === 'Site') ? 'block' : 'none';
-            fields.querySelector('#fHeldWrap').style.display = (t === 'Shop') ? 'none' : 'block';
-          };
-          typeSel.addEventListener('change', sync);
-          sync();
-        } else {
-          fields.innerHTML = ''
-            + '<p style="color:var(--muted);font-size:13px;margin:0 0 14px;">Leaves the unit where it is and attaches a note to its history.</p>'
-            + '<div class="field"><label>Note</label><textarea id="fNote" placeholder="Motor sounds rough, do not redeploy"></textarea></div>';
-        }
-        errEl.textContent = '';
-      }
-      drawFields();
-      back.querySelectorAll('.modeRow .chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-          mode = btn.getAttribute('data-mode');
-          back.querySelectorAll('.modeRow .chip').forEach(c => c.classList.toggle('active', c === btn));
-          drawFields();
-        });
-      });
-      function close(){ back.remove(); }
-      back.querySelector('#mCancel').addEventListener('click', close);
-      back.addEventListener('click', (e) => { if (e.target === back) close(); });
-      document.addEventListener('keydown', function onEsc(e){
-        if (e.key === 'Escape'){ close(); document.removeEventListener('keydown', onEsc); }
-      });
-      back.querySelector('#mSave').addEventListener('click', async () => {
-        const noteEl = fields.querySelector('#fNote');
-        const payload = {
-          itemCode: unit.itemId,
-          mode: mode,
-          by: 'Alice',
-          notes: noteEl ? noteEl.value.trim() : ''
-        };
-        if (mode === 'relocate'){
-          const t = fields.querySelector('#fType').value;
-          payload.locationType = t;
-          payload.toLocation = (t === 'Site') ? fields.querySelector('#fWhere').value.trim() : t;
-          payload.heldBy = (t === 'Shop') ? '' : fields.querySelector('#fHeld').value.trim();
-          if (t === 'Site' && !payload.toLocation){
-            errEl.textContent = 'A site needs an address or job name.';
-            return;
-          }
-        }
-        if (mode === 'note' && !payload.notes){
-          errEl.textContent = 'A note needs some text.';
-          return;
-        }
-        const saveBtn = back.querySelector('#mSave');
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
-        errEl.textContent = '';
-        const result = await sendOverride(payload);
-        if (result && result.ok){
-          close();
-          showToast(overrideMessage(result), true);
-          try { sessionStorage.removeItem(CACHE_KEY); } catch(e){}
-          loadDashboardFresh(false);
-        } else {
-          saveBtn.disabled = false;
-          saveBtn.textContent = 'Save';
-          errEl.textContent = (result && result.message) ? result.message : 'Could not save. Check your connection and try again.';
-        }
-      });
-    }
-    async function sendOverride(payload){
-      try {
-        // text/plain keeps this a simple request, so the browser skips the preflight
-        const res = await fetch(OVERRIDE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-          body: JSON.stringify(payload)
-        });
-        return await res.json();
-      } catch(e){
-        return { ok: false, message: 'Could not reach the server.' };
-      }
-    }
-    function overrideMessage(r){
-      let msg;
-      if (r.mode === 'checkin') msg = r.itemCode + ' checked in at the shop.';
-      else if (r.mode === 'note') msg = 'Note added to ' + r.itemCode + '.';
-      else msg = r.itemCode + ' moved to ' + (r.to || r.locationType) + (r.heldBy ? ' with ' + r.heldBy : '') + '.';
-      return msg.replace(/\.\.$/, '.');  // names like "Freddie M." already end in one
-    }
-    function showToast(msg, ok){
-      const t = document.createElement('div');
-      t.className = 'toast' + (ok ? '' : ' bad');
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 4000);
     }
     function renderContentsPage(body){
       document.getElementById('viewTitle').textContent = 'Contents Inventory';
@@ -654,8 +566,40 @@
     }
     function renderAhrenCheckouts(body){
       document.getElementById('viewTitle').textContent = 'All Active Checkouts';
-      const items = currentData.activeCheckouts || [];
-      // Stats bar
+      const feed = currentData.activeCheckouts || [];
+      if (ADMIN) { renderCheckoutsTable(body, feed, false); loadAdminCheckouts(body); return; }
+      renderCheckoutsTable(body, feed, false);
+    }
+    // Admin: pull the rows straight from the tracker so each one carries its checkout code and notes
+    async function loadAdminCheckouts(body){
+      try {
+        const [cRes, pRes, tRes, aRes] = await Promise.all([
+          fetch(SUPABASE_URL + '/rest/v1/checkouts?select=checkout_code,item_name,category,destination,notes,check_out_at,due_back_at,transfer_status,people(name)&checked_out=eq.true&order=due_back_at.asc.nullslast', { headers: SB_H, cache: 'no-store' }),
+          fetch(SUPABASE_URL + '/rest/v1/people?select=name&active=eq.true&order=name.asc', { headers: SB_H, cache: 'no-store' }),
+          fetch(SUPABASE_URL + '/rest/v1/shop_tools?select=item_name,category&active=eq.true&order=item_name.asc', { headers: SB_H, cache: 'no-store' }),
+          fetch(SUPABASE_URL + '/rest/v1/checkout_adjustments?select=checkout_code,action,editor,changes,reason,created_at&order=created_at.desc&limit=25', { headers: SB_H, cache: 'no-store' })
+        ]);
+        const rows = await cRes.json(); adminPeople = await pRes.json(); adminTools = await tRes.json(); const adj = await aRes.json();
+        if (!Array.isArray(rows)) throw new Error('bad');
+        const today = new Date(); today.setHours(0,0,0,0);
+        const items = rows.map(r => {
+          const due = r.due_back_at ? new Date(r.due_back_at) : null;
+          const dueDay = due ? new Date(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate()) : null;
+          const daysLate = dueDay ? Math.floor((today - dueDay) / 86400000) : 0;
+          return { code: r.checkout_code, person: (r.people && r.people.name) || '(unassigned)', item: r.item_name, category: r.category || '', destination: r.destination || '', notes: r.notes || '',
+            checkOut: new Date(r.check_out_at).toLocaleDateString(), dueBack: dueDay ? dueDay.toLocaleDateString() : 'no date',
+            dueISO: dueDay ? (dueDay.getFullYear() + '-' + String(dueDay.getMonth()+1).padStart(2,'0') + '-' + String(dueDay.getDate()).padStart(2,'0')) : '',
+            isOverdue: !!dueDay && daysLate > 0, daysLate: Math.max(0, daysLate), transferPending: r.transfer_status === 'pending',
+            toolPhotoUrl: (feedPhoto(r.item_name)) };
+        });
+        body.innerHTML = '';
+        renderCheckoutsTable(body, items, true);
+        renderAdjustments(body, Array.isArray(adj) ? adj : []);
+      } catch(e) { body.appendChild(fromHtml('<p class="adminNote">Editing is unavailable right now (could not reach the tracker). Showing the read-only list.</p>')); }
+    }
+    let adminPeople = [], adminTools = [];
+    function feedPhoto(itemName){ const f = (currentData.activeCheckouts || []).find(c => c.item === itemName); return f ? f.toolPhotoUrl : ''; }
+    function renderCheckoutsTable(body, items, editable){
       const stats = document.createElement('div');
       stats.className = 'statsBar';
       const overdueCount = items.filter(c => c.isOverdue).length;
@@ -665,29 +609,28 @@
         + '<div class="miniStat"><b>' + uniquePeople + '</b> people</div>'
         + '<div class="miniStat ' + (overdueCount > 0 ? 'hot' : '') + '"><b>' + overdueCount + '</b> overdue</div>';
       body.appendChild(stats);
-      if (items.length === 0){
-        body.appendChild(fromHtml('<div class="empty">Nothing is checked out right now.<small>When crew members check out tools through the app, they show up here.</small></div>'));
-        return;
-      }
-      // Filter bar
       const filterState = { search: '', category: 'all', overdueOnly: false };
       const searchBar = document.createElement('div');
       searchBar.className = 'searchBar';
       searchBar.innerHTML = ''
         + '<input id="coSearch" type="text" placeholder="Search by person or item..." autocomplete="off">'
-        + '<div class="chipRow" id="coFilters"></div>';
+        + '<div class="chipRow" id="coFilters"></div>'
+        + (editable ? '<button type="button" class="addBtn" id="coAdd">+ Add checkout</button>' : '');
       body.appendChild(searchBar);
+      if (editable) document.getElementById('coAdd').addEventListener('click', openAddModal);
       const categories = Array.from(new Set(items.map(c => c.category).filter(Boolean)));
       const chipRow = document.getElementById('coFilters');
       chipRow.appendChild(chipBtn('All', () => { filterState.category = 'all'; filterState.overdueOnly = false; refreshCheckouts(); }));
       chipRow.appendChild(chipBtn('Overdue only', () => { filterState.overdueOnly = !filterState.overdueOnly; refreshCheckouts(); }));
-      categories.forEach(cat => {
-        chipRow.appendChild(chipBtn(cat, () => { filterState.category = cat; refreshCheckouts(); }));
-      });
+      categories.forEach(cat => { chipRow.appendChild(chipBtn(cat, () => { filterState.category = cat; refreshCheckouts(); })); });
       document.getElementById('coSearch').addEventListener('input', (e) => { filterState.search = e.target.value.trim().toLowerCase(); refreshCheckouts(); });
       const container = document.createElement('div');
       container.id = 'coBody';
       body.appendChild(container);
+      if (items.length === 0){
+        container.innerHTML = '<div class="empty">Nothing is checked out right now.<small>When crew members check out tools through the app, they show up here.</small></div>';
+        return;
+      }
       function refreshCheckouts(){
         document.querySelectorAll('#coFilters .chip').forEach(c => {
           const label = c.textContent;
@@ -706,20 +649,101 @@
           document.getElementById('coBody').innerHTML = '<div class="empty">No checkouts match your filters.</div>';
           return;
         }
-        const rows = filtered.map(c => {
+        const rows = filtered.map((c, i) => {
           const statusBadge = c.isOverdue
             ? '<span class="badge b-late">' + c.daysLate + ' day' + (c.daysLate === 1 ? '' : 's') + ' late</span>'
             : '<span class="badge b-ok">On time</span>';
           const cls = c.isOverdue ? ' class="overdue"' : '';
           const thumb = c.toolPhotoUrl ? '<a href="' + esc(c.toolPhotoUrl) + '" target="_blank" rel="noopener"><img src="' + esc(c.toolPhotoUrl) + '" alt="" loading="lazy" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid var(--line);vertical-align:middle;margin-right:8px;"></a>' : '';
-          return '<tr' + cls + '><td><b>' + esc(c.person) + '</b></td><td>' + thumb + esc(c.item) + '</td><td>' + esc(c.category) + '</td><td>' + esc(c.destination || '-') + '</td><td>' + esc(c.checkOut) + '</td><td>' + esc(c.dueBack) + '</td><td>' + statusBadge + '</td></tr>';
+          const pend = c.transferPending ? ' <span class="badge b-late" style="background:rgba(246,137,34,.18);color:var(--orange);">handoff pending</span>' : '';
+          const editCell = editable ? '<td><button type="button" class="editBtn" data-code="' + esc(c.code) + '">Edit</button></td>' : '';
+          return '<tr' + cls + '><td><b>' + esc(c.person) + '</b>' + pend + '</td><td>' + thumb + esc(c.item) + '</td><td>' + esc(c.category) + '</td><td>' + esc(c.destination || '-') + '</td><td>' + esc(c.checkOut) + '</td><td>' + esc(c.dueBack) + '</td><td>' + statusBadge + '</td>' + editCell + '</tr>';
         }).join('');
         const scrollClass = filtered.length > 12 ? ' scroll' : '';
         const scrollHint = filtered.length > 12 ? '<div class="scrollHint">Scroll to see more &darr;</div>' : '';
-        document.getElementById('coBody').innerHTML = '<div class="tableWrap' + scrollClass + '"><table><thead><tr><th>Person</th><th>Item</th><th>Category</th><th>Where</th><th>Checked out</th><th>Due back</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + scrollHint;
+        document.getElementById('coBody').innerHTML = '<div class="tableWrap' + scrollClass + '"><table><thead><tr><th>Person</th><th>Item</th><th>Category</th><th>Where</th><th>Checked out</th><th>Due back</th><th>Status</th>' + (editable ? '<th></th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + scrollHint;
+        if (editable) document.querySelectorAll('#coBody .editBtn').forEach(b => b.addEventListener('click', () => openEditModal(items.find(x => x.code === b.dataset.code))));
       }
       refreshCheckouts();
     }
+    function renderAdjustments(body, adj){
+      const h = document.createElement('h2'); h.textContent = 'Recent adjustments'; h.style.cssText = 'font-family:Georgia,serif;font-size:18px;margin:26px 0 10px;';
+      body.appendChild(h);
+      if (!adj.length) { body.appendChild(fromHtml('<p class="adminNote">No manual changes yet. Edits and hand-entered checkouts show here with who made them.</p>')); return; }
+      const fmt = d => new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      const fmtVal = (k, v) => v == null ? '(blank)' : (k === 'due_back_at' || k === 'check_out_at' ? new Date(v).toLocaleDateString() : String(v));
+      const labels = { person: 'Person', due_back_at: 'Due back', destination: 'Where', notes: 'Notes' };
+      const rows = adj.map(a => {
+        let what;
+        if (a.action === 'add') { const c = a.changes || {}; what = 'Added <b>' + esc(c.item) + '</b> for <b>' + esc(c.person) + '</b>' + (c.destination ? ' to ' + esc(c.destination) : '') + ', out ' + esc(fmtVal('check_out_at', c.check_out_at)) + (c.due_back_at ? ', due ' + esc(fmtVal('due_back_at', c.due_back_at)) : ''); }
+        else { what = Object.keys(a.changes || {}).map(k => (labels[k] || k) + ': ' + esc(fmtVal(k, a.changes[k].from)) + ' &rarr; <b>' + esc(fmtVal(k, a.changes[k].to)) + '</b>').join('; '); }
+        return '<tr><td>' + esc(fmt(a.created_at)) + '</td><td>' + esc(a.editor) + '</td><td>' + esc(a.checkout_code) + '</td><td>' + what + (a.reason ? ' <span style="color:var(--muted);">&ldquo;' + esc(a.reason) + '&rdquo;</span>' : '') + '</td></tr>';
+      }).join('');
+      body.appendChild(fromHtml('<div class="tableWrap adjLog"><table><thead><tr><th>When</th><th>By</th><th>Checkout</th><th>Change</th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
+    }
+    // ---- Edit modal ----
+    let editingRow = null;
+    function fillPeople(sel, current){ sel.innerHTML = '<option value="" disabled' + (current ? '' : ' selected') + '>Pick a name</option>' + adminPeople.map(p => '<option value="' + esc(p.name) + '"' + (p.name === current ? ' selected' : '') + '>' + esc(p.name) + '</option>').join(''); }
+    function openEditModal(c){
+      editingRow = c;
+      document.getElementById('emWho').textContent = c.item + ' · ' + c.code;
+      fillPeople(document.getElementById('emPerson'), c.person);
+      document.getElementById('emDue').value = c.dueISO; document.getElementById('emDest').value = c.destination; document.getElementById('emNotes').value = c.notes; document.getElementById('emReason').value = '';
+      const g = document.getElementById('emGo'); g.disabled = false; g.textContent = 'Save changes';
+      document.getElementById('editModal').classList.add('show');
+    }
+    document.getElementById('emCancel').addEventListener('click', () => document.getElementById('editModal').classList.remove('show'));
+    document.getElementById('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') document.getElementById('editModal').classList.remove('show'); });
+    document.getElementById('emGo').addEventListener('click', async () => {
+      const c = editingRow; if (!c) return;
+      const g = document.getElementById('emGo'); g.disabled = true; g.textContent = 'Saving…';
+      try {
+        const body = { p_token: ADMIN_KEY, p_editor: EDITOR, p_checkout_code: c.code,
+          p_person: document.getElementById('emPerson').value || null,
+          p_due_date: document.getElementById('emDue').value ? document.getElementById('emDue').value + ' 00:00:00+00' : null,
+          p_destination: document.getElementById('emDest').value, p_notes: document.getElementById('emNotes').value,
+          p_reason: document.getElementById('emReason').value };
+        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_update_checkout', { method: 'POST', headers: SB_H, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => null);
+        if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not save');
+        toast(data.changed ? 'Saved' : 'Nothing changed', 'ok');
+        document.getElementById('editModal').classList.remove('show');
+        try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
+        const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenCheckouts(b);
+      } catch(err) { toast(err.message, 'bad'); g.disabled = false; g.textContent = 'Save changes'; }
+    });
+    // ---- Add modal ----
+    function openAddModal(){
+      fillPeople(document.getElementById('amPerson'), '');
+      document.getElementById('amItems').innerHTML = adminTools.map(t => '<option value="' + esc(t.item_name) + '">' + esc(t.category) + '</option>').join('');
+      const today = new Date(); const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      document.getElementById('amOut').value = iso(today); document.getElementById('amOut').max = iso(today); document.getElementById('amDue').value = '';
+      ['amItem','amDest','amNotes','amReason'].forEach(id => document.getElementById(id).value = '');
+      const g = document.getElementById('amGo'); g.disabled = false; g.textContent = 'Add checkout';
+      document.getElementById('addModal').classList.add('show');
+    }
+    document.getElementById('amCancel').addEventListener('click', () => document.getElementById('addModal').classList.remove('show'));
+    document.getElementById('addModal').addEventListener('click', (e) => { if (e.target.id === 'addModal') document.getElementById('addModal').classList.remove('show'); });
+    document.getElementById('amGo').addEventListener('click', async () => {
+      const person = document.getElementById('amPerson').value, item = document.getElementById('amItem').value.trim();
+      if (!person) { toast('Pick a name', 'bad'); return; }
+      if (!item) { toast('Enter the item', 'bad'); return; }
+      const g = document.getElementById('amGo'); g.disabled = true; g.textContent = 'Adding…';
+      try {
+        const body = { p_token: ADMIN_KEY, p_editor: EDITOR, p_person: person, p_tool: item,
+          p_destination: document.getElementById('amDest').value, p_notes: document.getElementById('amNotes').value,
+          p_due_date: document.getElementById('amDue').value ? document.getElementById('amDue').value + ' 00:00:00+00' : null,
+          p_checked_out_at: document.getElementById('amOut').value ? document.getElementById('amOut').value + ' 12:00:00-07' : null,
+          p_reason: document.getElementById('amReason').value };
+        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_add_checkout', { method: 'POST', headers: SB_H, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => null);
+        if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not add');
+        toast('Added ' + data.item + ' for ' + data.person, 'ok');
+        document.getElementById('addModal').classList.remove('show');
+        try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
+        const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenCheckouts(b);
+      } catch(err) { toast(err.message, 'bad'); g.disabled = false; g.textContent = 'Add checkout'; }
+    });
     function renderAhrenOverdue(body){
       document.getElementById('viewTitle').textContent = 'Overdue Items';
       const overdue = (currentData.activeCheckouts || []).filter(c => c.isOverdue);
@@ -853,7 +877,7 @@
       const card = document.createElement('div');
       card.className = 'pendCard';
       const approveUrl = 'https://haggertybuilds.app.n8n.cloud/webhook/alice-decision?pending=' + encodeURIComponent(p.pendingId) + '&action=approve';
-      const denyUrl = new URL('deny.html?pending=' + encodeURIComponent(p.pendingId), location.href).href;
+      const denyUrl = 'https://liambuilds.github.io/Shop-Inventory/deny.html?pending=' + encodeURIComponent(p.pendingId);
       card.innerHTML = ''
         + '<div class="pTop"><div class="pName">' + esc(p.person) + '</div><div class="pDate">' + esc(p.requestedAt) + '</div></div>'
         + '<div class="pItem"><b>' + esc(p.item) + '</b> (' + esc(p.category) + ')' + (p.destination ? ' to ' + esc(p.destination) : '') + '</div>'
