@@ -173,6 +173,7 @@
       </div>
     </div>
   </div>
+  <script src="device.js"></script>
   <script>
     const SUPABASE_URL = "https://tdflgfuqjnwctadsjizz.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_w9xkQQE07152NL8faFVTwQ_LSJ9Hf_d";
@@ -288,10 +289,11 @@
       const btn = document.getElementById('takeConfirm'); btn.disabled = true; btn.textContent = 'Recording…';
       const list = []; cart.forEach((quantity, itemCode) => list.push({ itemCode, quantity }));
       try {
-        const res = await fetch(ADJUST_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ person, action: 'take', items: list, notes: document.getElementById('takeNotes').value.trim() }) });
+        const res = await fetch(ADJUST_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ person, action: 'take', items: list, notes: document.getElementById('takeNotes').value.trim(), deviceToken: HagDevice.token() }) });
         const data = await res.json().catch(() => null);
         if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not record that');
         try { localStorage.setItem(NAME_KEY, person); } catch(e) {}
+        HagDevice.claim(person);
         (data.done || []).forEach(d => { const t = items.find(x => x.item_code === d.itemCode); if (t) { t.quantity = d.after; t.count_verified = true; } });
         cart.clear();
         document.getElementById('takeModal').classList.remove('show');
@@ -388,6 +390,7 @@
       catch(err) { toast(err.message, 'bad'); }
     });
     load();
+    HagDevice.init({ selectId: 'takeName', verb: 'Taking' });
   </script>
 </body>
 </html>

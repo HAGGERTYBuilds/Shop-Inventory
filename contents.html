@@ -188,6 +188,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="device.js"></script>
   <script>
     const GET_LISTS_URL    = "https://haggertybuilds.app.n8n.cloud/webhook/sb-contents-lists";
     const TAKE_URL         = "https://haggertybuilds.app.n8n.cloud/webhook/sb-record-take";
@@ -404,7 +405,8 @@
       const payload = {
         person: name,
         items: addedItems.map(i => ({ itemId: i.itemId, item: i.item, quantity: i.quantity })),
-        reason: reason
+        reason: reason,
+        deviceToken: HagDevice.token()
       };
       try {
         const res = await fetch(url, {
@@ -427,6 +429,7 @@
           return;
         }
         // Success
+        HagDevice.claim(name);
         document.getElementById('doneTitle').textContent = mode === 'take' ? 'Supplies taken' : 'Restock recorded';
         const count = addedItems.length;
         document.getElementById('doneLine').textContent =
@@ -454,6 +457,7 @@
 
     // Init
     loadData();
+    HagDevice.init({ selectId: 'name', verb: 'Taking supplies' });
     renderAddedItems();
   </script>
 </body>

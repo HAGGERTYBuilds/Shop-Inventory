@@ -528,6 +528,7 @@
       if (view === 'overdue') return renderAhrenOverdue(body);
       if (view === 'activity') return renderAhrenActivity(body);
       if (view === 'transfers') return renderAhrenTransfers(body);
+      if (view === 'phones') return renderAhrenPhones(body);
       renderAhrenHome(body);
     }
     function renderAhrenHome(body){
@@ -539,7 +540,8 @@
         + tile('checkouts', 'Checked out', s.totalOut, s.uniquePeopleWithGear + ' people', '', iconEquipment())
         + tile('overdue', 'Overdue', s.overdueCount, s.overdueCount === 0 ? 'none' : (s.overdueCount + ' late'), s.overdueCount > 0 ? 'hot' : '', iconLate())
         + tile('activity', 'Activity', (currentData.recentReturns.length + currentData.activeCheckouts.filter(c => c.checkOut).length), 'last 24h', '', iconActivity())
-        + tile('transfers', 'Handoffs waiting', (s.pendingTransferCount || 0), (s.staleTransferCount || 0) > 0 ? (s.staleTransferCount + ' over 24h') : 'none stuck', (s.staleTransferCount || 0) > 0 ? 'hot' : '', iconActivity());
+        + tile('transfers', 'Handoffs waiting', (s.pendingTransferCount || 0), (s.staleTransferCount || 0) > 0 ? (s.staleTransferCount + ' over 24h') : 'none stuck', (s.staleTransferCount || 0) > 0 ? 'hot' : '', iconActivity())
+        + (ADMIN ? tile('phones', 'Linked phones', '', 'who is linked, unlink lost phones', '', iconEquipment()) : '');
       body.appendChild(tiles);
     }
     function renderAhrenTransfers(body){
@@ -563,6 +565,32 @@
       }).join('');
       body.appendChild(fromHtml('<div class="tableWrap"><table><thead><tr><th>Item</th><th>From</th><th>To</th><th>Where</th><th>Note</th><th>Waiting</th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
       body.appendChild(fromHtml('<p style="color:var(--muted);font-size:13px;margin-top:12px;">The tool stays on the giver\'s record until the receiver accepts. Both get a reminder email after 24 hours.</p>'));
+    }
+    async function renderAhrenPhones(body){
+      document.getElementById('viewTitle').textContent = 'Linked Phones';
+      if (!ADMIN) { body.appendChild(fromHtml('<p class="adminNote">Editing is off on this browser. Open the dashboard with your access key once to turn it on.</p>')); return; }
+      body.appendChild(fromHtml('<p class="adminNote" style="margin:0 0 14px;">Each person\'s phone links itself the first time they check out, return, or take something under their name. Unlink someone when they get a new phone or lose one; their next phone links on first use.</p>'));
+      let data = null;
+      try { const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_list_devices', { method: 'POST', headers: SB_H, body: JSON.stringify({ p_token: ADMIN_KEY }) }); data = await res.json(); } catch(e) {}
+      if (!data || !data.ok) { body.appendChild(fromHtml('<div class="empty">Could not load the list.</div>')); return; }
+      const people = data.people || [];
+      const linked = people.filter(p => p.linked).length;
+      body.appendChild(fromHtml('<div class="statsBar"><div class="miniStat"><b>' + linked + '</b> linked</div><div class="miniStat"><b>' + (people.length - linked) + '</b> not yet</div></div>'));
+      const fmt = d => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      const rows = people.map(p => '<tr><td><b>' + esc(p.person) + '</b></td><td>' + (p.linked ? '<span class="badge b-ok">linked</span>' : '<span class="badge" style="background:rgba(154,154,154,.15);color:var(--muted);">not yet</span>') + '</td><td>' + esc(p.label || '') + '</td><td>' + esc(fmt(p.claimedAt)) + '</td><td>' + esc(fmt(p.lastSeen)) + '</td><td>' + (p.linked ? '<button type="button" class="editBtn unlinkBtn" data-person="' + esc(p.person) + '">Unlink</button>' : '') + '</td></tr>').join('');
+      body.appendChild(fromHtml('<div class="tableWrap' + (people.length > 14 ? ' scroll' : '') + '"><table><thead><tr><th>Person</th><th>Phone</th><th>Type</th><th>Linked</th><th>Last used</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
+      body.querySelectorAll('.unlinkBtn').forEach(btn => btn.addEventListener('click', async () => {
+        const who = btn.dataset.person;
+        if (!confirm('Unlink ' + who + '\'s phone? Their next phone will link itself the first time they use it.')) return;
+        btn.disabled = true; btn.textContent = 'Unlinking…';
+        try {
+          const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_unlink_device', { method: 'POST', headers: SB_H, body: JSON.stringify({ p_token: ADMIN_KEY, p_editor: EDITOR, p_person: who }) });
+          const d = await res.json();
+          if (!d || !d.ok) throw new Error((d && d.message) || 'Could not unlink');
+          toast(who + ' unlinked', 'ok');
+          const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenPhones(b);
+        } catch(err) { toast(err.message, 'bad'); btn.disabled = false; btn.textContent = 'Unlink'; }
+      }));
     }
     function renderAhrenCheckouts(body){
       document.getElementById('viewTitle').textContent = 'All Active Checkouts';

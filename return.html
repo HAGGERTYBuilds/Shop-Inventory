@@ -270,6 +270,7 @@
   </div>
   <!-- QR scanner library (jsQR - lightweight, no build step needed) -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="device.js"></script>
   <script>
     // ---- Webhook URLs ----
    const GET_LISTS_URL    = "https://haggertybuilds.app.n8n.cloud/webhook/sb-shop-lists";
@@ -312,7 +313,7 @@
     // The scanned value is sent to the server, which does the real check.
     function looksLikeShopCode(v){
       const s = String(v || '').trim();
-      return /^HAGGERTY-/i.test(s) || /^https?:\/\/(liambuilds|haggertybuilds)\.github\.io\/shop-inventory\//i.test(s);
+      return /^HAGGERTY-/i.test(s) || /^https?:\/\/liambuilds\.github\.io\/shop-inventory\//i.test(s);
     }
     function haversineMeters(lat1, lon1, lat2, lon2){
       const R = 6371000;
@@ -361,7 +362,7 @@
           const res = await fetch(UNDO_URL, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({checkoutId})
+            body: JSON.stringify({checkoutId, deviceToken: HagDevice.token()})
           });
           if (!res.ok) throw new Error('bad response');
           hideUndoBar();
@@ -441,6 +442,7 @@
       }
     }
     loadPeople();
+    HagDevice.init({ selectId: 'name', verb: 'Returning' });
     // ---- Handoff mode (?mode=handoff): same page, but items are tap-to-select and go to one teammate ----
     const HANDOFF = new URLSearchParams(location.search).get('mode') === 'handoff';
     let currentItems = [];
@@ -795,7 +797,8 @@
             verificationMethod: returnVerification.method,
             lat: returnVerification.lat != null ? returnVerification.lat : null,
             lng: returnVerification.lng != null ? returnVerification.lng : null,
-            qrValue: returnVerification.qrValue || null
+            qrValue: returnVerification.qrValue || null,
+            deviceToken: HagDevice.token()
           })
         });
         const data = await res.json().catch(() => null);
@@ -823,6 +826,7 @@
         closeReturnModal();
         document.querySelectorAll('.ret').forEach(b => { b.disabled = true; });
         completeReturn(ctx);
+        HagDevice.claim(document.getElementById('name').value).then(r => { if (r && r.ok === false && r.message) toast(r.message); });
         btn.disabled = false;
         btn.textContent = 'Confirm Return';
       } catch(e){
@@ -878,10 +882,11 @@
       try {
         const ids = items.map(it => it.checkoutId);
         const res = await fetch(TRANSFER_URL, { method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ checkoutIds: ids, checkoutId: ids[0], toPerson, note }) });
+          body: JSON.stringify({ checkoutIds: ids, checkoutId: ids[0], toPerson, note, deviceToken: HagDevice.token() }) });
         const data = await res.json().catch(() => null);
         if (!data || data.ok !== true) { toast((data && data.message) || 'Could not send, try again'); btn.disabled = false; btn.textContent = 'Send handoff'; return; }
         closeTransferModal();
+        HagDevice.claim(document.getElementById('name').value);
         const sentN = Array.isArray(data.sent) ? data.sent.length : items.length;
         const failedN = Array.isArray(data.failed) ? data.failed.length : 0;
         toast('Sent ' + (sentN > 1 ? sentN + ' items' : (items[0].item)) + ' to ' + toPerson.replace(/\.$/, '') + (failedN ? ' (' + failedN + ' could not be sent)' : '') + '. Waiting on them to accept.', true);
@@ -892,7 +897,7 @@
       if (!it.transferCode) return;
       el.disabled = true; el.textContent = 'Cancelling…';
       try {
-        const res = await fetch(TRANSFER_RESPOND + '?code=' + encodeURIComponent(it.transferCode) + '&action=cancel&format=json', { cache: 'no-store' });
+        const res = await fetch(TRANSFER_RESPOND + '?code=' + encodeURIComponent(it.transferCode) + '&action=cancel&format=json&deviceToken=' + encodeURIComponent(HagDevice.token()), { cache: 'no-store' });
         const data = await res.json().catch(() => null);
         if (data && data.ok) toast('Handoff cancelled'); else toast((data && data.message) || 'Could not cancel');
       } catch(e) { toast('No signal, try again'); }
@@ -944,7 +949,7 @@
       a.disabled = true; d.disabled = true;
       try {
         const codes = g.items.map(t => t.transferCode).join(',');
-        const res = await fetch(TRANSFER_RESPOND + '?code=' + encodeURIComponent(codes) + '&action=' + action + '&format=json', { cache: 'no-store' });
+        const res = await fetch(TRANSFER_RESPOND + '?code=' + encodeURIComponent(codes) + '&action=' + action + '&format=json&deviceToken=' + encodeURIComponent(HagDevice.token()), { cache: 'no-store' });
         const data = await res.json().catch(() => null);
         if (data && data.ok) toast(action === 'accept' ? ((g.items.length > 1 ? g.items.length + ' items are' : g.items[0].item + ' is') + ' now on your list') : 'Declined', action === 'accept');
         else toast((data && data.message) || 'Could not update');

@@ -355,6 +355,7 @@
   <div class="toast" id="toast"></div>
   <!-- QR scanner library (jsQR - lightweight, no build step needed) -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="device.js"></script>
   <script>
     // ---- Webhooks ----
     const GET_LISTS_URL    = "https://haggertybuilds.app.n8n.cloud/webhook/sb-shop-lists";
@@ -663,7 +664,7 @@
     }
     function looksLikeShopCode(v){
       const t = String(v || '').trim();
-      return /^HAGGERTY-/i.test(t) || /^https?:\/\/(liambuilds|haggertybuilds)\.github\.io\/shop-inventory\//i.test(t);
+      return /^HAGGERTY-/i.test(t) || /^https?:\/\/liambuilds\.github\.io\/shop-inventory\//i.test(t);
     }
     function setPresence(p){
       presence = p;
@@ -891,7 +892,7 @@
       const a = document.getElementById('xferAccept'), d = document.getElementById('xferDecline');
       a.disabled = true; d.disabled = true;
       try {
-        const res = await fetch(TRANSFER_RESPOND + '?code=' + encodeURIComponent(t.transferCode) + '&action=' + action + '&format=json', { cache: 'no-store' });
+        const res = await fetch(TRANSFER_RESPOND + '?code=' + encodeURIComponent(t.transferCode) + '&action=' + action + '&format=json&deviceToken=' + encodeURIComponent(HagDevice.token()), { cache: 'no-store' });
         const data = await res.json().catch(() => null);
         if (data && data.ok) toast(action === 'accept' ? (t.item + ' is now on your list') : 'Declined');
         else toast((data && data.message) || 'Could not update');
@@ -1035,7 +1036,8 @@
           verificationMethod: presence ? presence.method : null,
           lat: presence && presence.lat != null ? presence.lat : null,
           lng: presence && presence.lng != null ? presence.lng : null,
-          qrValue: presence && presence.qrValue ? presence.qrValue : null
+          qrValue: presence && presence.qrValue ? presence.qrValue : null,
+          deviceToken: HagDevice.token()
         };
         let data = null;
         try {
@@ -1047,6 +1049,8 @@
         else { u.status = 'failed'; u.message = (data && data.message) ? data.message : 'No signal'; }
       }
       submitting = false; btn.disabled = false; btn.textContent = 'Check Out Tool';
+      // First successful action under this name links the phone to it
+      if (b.units.some(u => u.status === 'checked_out' || u.status === 'pending')) HagDevice.claim(b.name).then(r => { if (r && r.ok === false && r.message) toast(r.message); });
       showBatchResult();
     }
     function showBatchResult(){
@@ -1127,6 +1131,7 @@
     });
     // Start. A printed section code encodes checkout.html?category=X so it works from the phone camera too.
     loadData();
+    HagDevice.init({ selectId: 'name', verb: 'Checking out' });
     (function startFromUrl(){
       let cat = '';
       try { cat = new URLSearchParams(location.search).get('category') || ''; } catch(e) {}

@@ -219,6 +219,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="device.js"></script>
   <script>
     const DATA_URL = "https://haggertybuilds.app.n8n.cloud/webhook/sb-trailer-data";
     const RESERVE_URL = "https://haggertybuilds.app.n8n.cloud/webhook/sb-trailer-reserve";
@@ -505,7 +506,8 @@
         person, trailer,
         start: new Date(start).toISOString(),
         end: new Date(end).toISOString(),
-        destination, notes
+        destination, notes,
+        deviceToken: HagDevice.token()
       };
 
       try {
@@ -516,6 +518,7 @@
         });
         const data = await res.json();
         if (data.ok){
+          HagDevice.claim(person);
           toast('Reserved! Confirmation email sent.');
           document.getElementById('reserveModal').classList.remove('show');
           loadData();
@@ -539,6 +542,7 @@
 
     // Init
     loadData();
+    HagDevice.init({ selectId: 'personSel', verb: 'Reserving' });
   </script>
 </body>
 </html>
