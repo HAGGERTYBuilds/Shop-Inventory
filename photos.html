@@ -25,6 +25,13 @@
   .sub{color:var(--muted); font-size:14px; margin:0 0 18px; line-height:1.4;}
   input[type=search]{width:100%; appearance:none; background:var(--field); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:14px 15px; font-size:16px; font-family:inherit; margin-bottom:14px;}
   input[type=search]:focus{outline:none; border-color:var(--orange);}
+  .bulk{border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:14px; margin:0 0 16px; background:rgba(255,255,255,.03);}
+  .bulk-t{font-weight:700; font-size:15px; margin-bottom:4px;}
+  .bulk-s{color:var(--muted); font-size:13px; line-height:1.4; margin-bottom:10px;}
+  .bulk-s b{color:var(--paper); font-weight:600;}
+  .bulk-btn{display:inline-block; border:1.5px solid var(--orange); color:var(--orange); border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; cursor:pointer;}
+  .bulk-log{font-size:13px; line-height:1.5; margin-top:10px; white-space:pre-wrap; color:var(--muted);}
+  .bulk-log .ok{color:#3fb27f;} .bulk-log .bad{color:#e0625e;}
   .stats{display:flex; gap:10px; margin-bottom:16px; font-size:13px; color:var(--muted);}
   .stats b{color:var(--paper);}
   .cat{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:18px 0 8px;}
@@ -61,6 +68,13 @@
     <div id="app" style="display:none;">
       <p class="lead">Add or replace tool photos</p>
       <p class="sub">Tap a tool, take the picture, done. Photos shrink on your phone before upload, so it works fine on shop signal. The new picture shows on the return page right away and on the checkout page within about half an hour.</p>
+      <div class="bulk">
+        <div class="bulk-t">Bulk upload from named files</div>
+        <div class="bulk-s">Pick photos named like <b>EQ-088 Echo Chainsaw.jpg</b>. The code at the start of the file name picks the tool. Several files with the same code: the first one wins.</div>
+        <label class="bulk-btn" for="bulkPicker">Choose files</label>
+        <input type="file" id="bulkPicker" accept="image/*" multiple style="display:none;">
+        <div id="bulkLog" class="bulk-log"></div>
+      </div>
       <input type="search" id="q" placeholder="Search tools" autocomplete="off">
       <div class="stats"><span><b id="withPhoto">0</b> with photos</span><span><b id="without">0</b> without</span></div>
       <div id="list"><div class="empty">Loading tools…</div></div>
@@ -146,6 +160,42 @@
       return dataUrl.split(',')[1];
     }
     document.getElementById('q').addEventListener('input', render);
+
+    // Bulk upload: file name starts with the item code (EQ-012 ... .jpg or SM-3 ... .jpg)
+    document.getElementById('bulkPicker').addEventListener('change', async (e) => {
+      const files = [...(e.target.files || [])]; e.target.value = '';
+      if (!files.length) return;
+      const log = document.getElementById('bulkLog');
+      const line = (msg, cls) => { const d = document.createElement('div'); d.textContent = msg; if (cls) d.className = cls; log.appendChild(d); };
+      log.innerHTML = '';
+      const seen = new Set(); const jobs = [];
+      for (const f of files) {
+        const m = /^\s*((?:EQ|SM)-\d+)/i.exec(f.name);
+        if (!m) { line('Skipped ' + f.name + ': no item code at the start of the name', 'bad'); continue; }
+        const code = m[1].toUpperCase();
+        if (seen.has(code)) { line('Skipped ' + f.name + ': ' + code + ' already in this batch', 'bad'); continue; }
+        const t = tools.find(x => x.itemId === code);
+        if (!t && /^EQ-/.test(code)) { line('Skipped ' + f.name + ': ' + code + ' is not in the tool list', 'bad'); continue; }
+        seen.add(code); jobs.push({ f, code, t });
+      }
+      let done = 0;
+      for (const j of jobs) {
+        try {
+          const b64 = await shrink(j.f);
+          const res = await fetch(UPLOAD_URL, { method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ token: key, photos: [{ itemCode: j.code, path: j.code.toLowerCase() + '.jpg', contentType: 'image/jpeg', base64: b64 }] }) });
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || data.ok !== true) throw new Error((data && data.message) || 'upload failed');
+          if (j.t) j.t.photoUrl = 'https://tdflgfuqjnwctadsjizz.supabase.co/storage/v1/object/public/tool-photos/' + j.code.toLowerCase() + '.jpg';
+          done++; line(j.code + (j.t ? ' ' + j.t.item : '') + ': uploaded', 'ok');
+        } catch(err) {
+          line(j.code + ': ' + (res403(err) ? 'access key not accepted' : 'upload failed'), 'bad');
+          if (res403(err)) break;
+        }
+      }
+      line(done + ' of ' + jobs.length + ' uploaded.');
+      render();
+    });
   </script>
 </body>
 </html>
