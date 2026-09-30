@@ -41,6 +41,7 @@
   .row .info{flex:1; min-width:0;}
   .row .nm{font-size:15px; font-weight:600; word-wrap:break-word;}
   .row .code{font-size:12px; color:var(--muted); margin-top:2px;}
+  .row button.rm{border-color:var(--gray); color:var(--muted); padding:10px 10px;}
   .row button{appearance:none; border:1.5px solid var(--orange); background:transparent; color:var(--orange); border-radius:10px; padding:10px 12px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; flex-shrink:0;}
   .row button.has{border-color:var(--gray); color:var(--paper);}
   .row button:disabled{opacity:.5; cursor:default;}
@@ -125,6 +126,11 @@
       const b = document.createElement('button'); b.type = 'button'; b.textContent = t.photoUrl ? 'Replace' : 'Add photo'; if (t.photoUrl) b.classList.add('has');
       b.addEventListener('click', () => pick(t, row, b));
       row.appendChild(b);
+      if (t.photoUrl) {
+        const x = document.createElement('button'); x.type = 'button'; x.textContent = 'Remove'; x.classList.add('rm');
+        x.addEventListener('click', () => removePhoto(t, row, x));
+        row.appendChild(x);
+      }
       return row;
     }
     let pending = null;
@@ -147,6 +153,25 @@
         row.classList.remove('busy'); btn.disabled = false; btn.textContent = t.photoUrl ? 'Replace' : 'Add photo';
       }
     });
+    const SB_URL = "https://tdflgfuqjnwctadsjizz.supabase.co", SB_KEY = "sb_publishable_w9xkQQE07152NL8faFVTwQ_LSJ9Hf_d";
+    // Remove: clears the photo on the item so the catalog and pages stop showing it. The old file stays in storage until a new one replaces it.
+    async function removePhoto(t, row, btn){
+      if (!confirm('Remove the photo from ' + t.item + '?')) return;
+      row.classList.add('busy'); btn.disabled = true; btn.textContent = 'Removing…';
+      try {
+        const res = await fetch(SB_URL + '/rest/v1/rpc/admin_remove_photo', { method: 'POST',
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_token: key, p_item_code: t.itemId }) });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || data.ok !== true) throw new Error((data && data.message) || 'remove failed');
+        t.photoUrl = '';
+        toast(t.item + ': photo removed', 'green');
+        render();
+      } catch(err) {
+        toast(/access key/i.test(String(err && err.message)) ? 'Access key not accepted' : 'Remove failed, try again', 'red');
+        row.classList.remove('busy'); btn.disabled = false; btn.textContent = 'Remove';
+      }
+    }
     function res403(err){ return /unauthor/i.test(String(err && err.message)); }
     // Resize on the phone: long side MAX_SIDE px, JPEG, honoring EXIF rotation via createImageBitmap when available
     async function shrink(file){
