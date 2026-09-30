@@ -94,6 +94,11 @@
   .returnModal .box{background:var(--bg); border:1.5px solid var(--line); border-radius:16px; padding:24px; max-width:420px; width:100%; margin:auto;}
   .returnModal h3{font-family:Georgia,serif; font-size:20px; margin:0 0 18px; color:var(--paper);}
   .returnModal .req{color:var(--orange); font-weight:700; margin-left:2px;}
+  .qtyRow{display:flex; align-items:center; gap:10px;}
+  .qtyRow button{appearance:none; width:44px; height:44px; border-radius:10px; border:1.5px solid var(--line); background:var(--field); color:var(--paper); font-size:22px; font-weight:700; cursor:pointer;}
+  .qtyRow input{width:80px; height:44px; text-align:center; font-size:18px; font-weight:700; background:var(--field); color:var(--paper); border:1.5px solid var(--line); border-radius:10px;}
+  .qtyRow input:focus{outline:none; border-color:var(--orange);}
+  .qtyRow .of{color:var(--muted, #999); font-size:14px;}
   .returnModal textarea{width:100%; background:var(--field); color:var(--paper); border:1.5px solid var(--line);
     border-radius:12px; padding:14px 15px; font-size:16px; font-family:inherit; resize:vertical; min-height:64px;}
   .returnModal textarea:focus{outline:none; border-color:var(--orange);}
@@ -210,6 +215,15 @@
   <div class="returnModal" id="returnModal">
     <div class="box">
       <h3>Confirm return</h3>
+      <div class="field" id="returnQtyField" style="display:none;">
+        <label for="returnQty">How many are you bringing back? <span class="req">*</span></label>
+        <div class="qtyRow">
+          <button type="button" id="returnQtyMinus" aria-label="Fewer">&minus;</button>
+          <input type="number" id="returnQty" inputmode="numeric" min="1" step="1" value="1">
+          <button type="button" id="returnQtyPlus" aria-label="More">+</button>
+          <span class="of" id="returnQtyOf"></span>
+        </div>
+      </div>
       <div class="field">
         <label for="returnNotes">Condition / notes <span class="req">*</span></label>
         <div class="notesRow">
@@ -335,7 +349,7 @@
     // ---- UNDO SUPPORT ----
     let undoTimer = null;
     let undoCountdown = null;
-    function showUndoBar(item, checkoutId){
+    function showUndoBar(item, checkoutId, returnedCode){
       const bar = document.getElementById('undoBar');
       const msg = document.getElementById('undoMsg');
       const btn = document.getElementById('undoBtn');
@@ -362,7 +376,7 @@
           const res = await fetch(UNDO_URL, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({checkoutId, deviceToken: HagDevice.token()})
+            body: JSON.stringify({checkoutId, returnedCode: returnedCode || '', deviceToken: HagDevice.token()})
           });
           if (!res.ok) throw new Error('bad response');
           hideUndoBar();
@@ -499,6 +513,8 @@
         list.innerHTML = '<div class="empty">Could not load items. Try again.</div>';
       }
     }
+    // Multi-count items (delineators) show how many are out, e.g. "Delineator Tops ×40"
+    function itemLabel(it){ const q = Number(it.quantity || 1); return q > 1 ? (it.item + ' \u00d7' + q) : it.item; }
     function renderItems(items){
       const list = document.getElementById('items');
       const itemsArea = document.getElementById('itemsArea');
@@ -528,7 +544,7 @@
               <div class="meta"></div>
               ${it.transferPending ? '<span class="xferTag">Handoff pending</span><button type="button" class="xferCancel">Cancel handoff</button>' : ''}
             </div>`;
-          card.querySelector('.nm').textContent = it.item;
+          card.querySelector('.nm').textContent = itemLabel(it);
           card.querySelector('.meta').textContent = it.dueBack ? 'Due back ' + fmt(it.dueBack) : 'No return date set';
           const th = card.querySelector('img.thumb'); if (th) { th.src = it.photoUrl; th.onerror = () => th.remove(); }
           const xc = card.querySelector('.xferCancel');
@@ -569,7 +585,7 @@
             ${it.transferPending ? '' : '<button type="button" class="xfer">Transfer</button>'}
           </div>
         `;
-        card.querySelector('.nm').textContent = it.item;
+        card.querySelector('.nm').textContent = itemLabel(it);
         const th = card.querySelector('img.thumb'); if (th) { th.src = it.photoUrl; th.onerror = () => th.remove(); }
         card.querySelector('.meta').textContent = dueLabel;
         const xb = card.querySelector('.xfer');
@@ -580,7 +596,7 @@
         btn.addEventListener('click', () => {
           if(btn.disabled) return;
           if(window.__returning){ toast('Please wait…'); return; }
-          openReturnModal({ item: it.item, checkoutId: it.checkoutId, card, btn, list, itemsArea, emptyState });
+          openReturnModal({ item: it.item, checkoutId: it.checkoutId, quantity: Number(it.quantity || 1), trackQuantity: !!it.trackQuantity, it, card, btn, list, itemsArea, emptyState });
         });
         list.appendChild(card);
       });
@@ -610,11 +626,28 @@
     let returnPhotoFile = null;
     let returnVerification = null; // { method: 'gps'|'qr', lat, lng }
     let geoWatchActive = false;
+    function returnQtyValue(){
+      const ctx = currentReturnCtx;
+      if (!ctx || !(ctx.trackQuantity && ctx.quantity > 1)) return null;
+      const n = parseInt(document.getElementById('returnQty').value, 10);
+      return (n >= 1 && n <= ctx.quantity) ? n : 0;
+    }
     function updateConfirmEnabled(){
       const notes = document.getElementById('returnNotes').value.trim();
       const btn = document.getElementById('confirmReturn');
-      btn.disabled = !(notes && returnPhotoFile && returnVerification);
+      const q = returnQtyValue();
+      btn.disabled = !(notes && returnPhotoFile && returnVerification && q !== 0);
+      if (!btn.dataset.busy) btn.textContent = (q && currentReturnCtx && q < currentReturnCtx.quantity) ? ('Return ' + q + ' of ' + currentReturnCtx.quantity) : 'Confirm Return';
     }
+    function bumpReturnQty(d){
+      const ctx = currentReturnCtx; if (!ctx) return;
+      const qi = document.getElementById('returnQty');
+      const n = Math.min(ctx.quantity, Math.max(1, (parseInt(qi.value, 10) || 0) + d));
+      qi.value = n; updateConfirmEnabled();
+    }
+    document.getElementById('returnQtyMinus').addEventListener('click', () => bumpReturnQty(-1));
+    document.getElementById('returnQtyPlus').addEventListener('click', () => bumpReturnQty(1));
+    document.getElementById('returnQty').addEventListener('input', updateConfirmEnabled);
     function resetReturnModalState(){
       document.getElementById('returnNotes').value = '';
       const ms = document.getElementById('returnMicStatus'); ms.style.display = 'none'; ms.classList.remove('err');
@@ -633,6 +666,16 @@
     function openReturnModal(ctx){
       currentReturnCtx = ctx;
       resetReturnModalState();
+      const qf = document.getElementById('returnQtyField');
+      const qi = document.getElementById('returnQty');
+      if (ctx.trackQuantity && ctx.quantity > 1) {
+        qf.style.display = 'block';
+        qi.max = ctx.quantity; qi.value = ctx.quantity;
+        document.getElementById('returnQtyOf').textContent = 'of ' + ctx.quantity + ' out';
+      } else {
+        qf.style.display = 'none';
+        qi.value = ctx.quantity || 1;
+      }
       document.getElementById('returnModal').classList.add('show');
       startGeoCheck();
     }
@@ -780,8 +823,10 @@
       if(!ctx) return;
       const btn = document.getElementById('confirmReturn');
       const notes = document.getElementById('returnNotes').value.trim();
-      if(!notes || !returnPhotoFile || !returnVerification){ updateConfirmEnabled(); return; }
+      const qty = returnQtyValue();
+      if(!notes || !returnPhotoFile || !returnVerification || qty === 0){ updateConfirmEnabled(); return; }
       window.__returning = true;
+      btn.dataset.busy = '1';
       btn.disabled = true;
       btn.textContent = 'Uploading photo…';
       try{
@@ -798,6 +843,7 @@
             lat: returnVerification.lat != null ? returnVerification.lat : null,
             lng: returnVerification.lng != null ? returnVerification.lng : null,
             qrValue: returnVerification.qrValue || null,
+            quantity: qty,
             deviceToken: HagDevice.token()
           })
         });
@@ -816,6 +862,7 @@
             document.getElementById('qrFallbackBtn').style.display = 'block';
             updateConfirmEnabled();
           }
+          delete btn.dataset.busy;
           btn.disabled = false;
           btn.textContent = 'Confirm Return';
           window.__returning = false;
@@ -824,13 +871,24 @@
         // Small delay so the write fully commits before the next return can fire
         await new Promise(r => setTimeout(r, 1200));
         closeReturnModal();
-        document.querySelectorAll('.ret').forEach(b => { b.disabled = true; });
-        completeReturn(ctx);
+        delete btn.dataset.busy;
+        if (data && data.partial === true && Number(data.remainingQty) > 0) {
+          // Partial return: keep the card, show what is still out
+          ctx.it.quantity = Number(data.remainingQty);
+          ctx.card.querySelector('.nm').textContent = itemLabel(ctx.it);
+          showUndoBar(data.returnedQty + ' ' + ctx.item, ctx.checkoutId, data.returnedCode);
+          toast(data.returnedQty + ' returned, ' + data.remainingQty + ' still out', true);
+          window.__returning = false;
+        } else {
+          document.querySelectorAll('.ret').forEach(b => { b.disabled = true; });
+          completeReturn(ctx);
+        }
         HagDevice.claim(document.getElementById('name').value).then(r => { if (r && r.ok === false && r.message) toast(r.message); });
         btn.disabled = false;
         btn.textContent = 'Confirm Return';
       } catch(e){
         toast('Could not return, try again');
+        delete btn.dataset.busy;
         btn.disabled = false;
         btn.textContent = 'Confirm Return';
         window.__returning = false;

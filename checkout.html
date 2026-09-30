@@ -188,6 +188,14 @@
   .qty button{appearance:none; width:32px; height:32px; border-radius:8px; border:1.5px solid var(--line); background:var(--card);
     color:var(--paper); font-size:18px; font-weight:700; cursor:pointer; line-height:1; font-family:inherit;}
   .qty span{min-width:26px; text-align:center; font-weight:700; font-size:15px;}
+  .qty input{width:52px; height:32px; text-align:center; font-weight:700; font-size:15px; background:var(--card); color:var(--paper); border:1.5px solid var(--line); border-radius:8px; font-family:inherit; -moz-appearance:textfield;}
+  .qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .qtyPick{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; padding:10px 15px; border:1.5px solid var(--line); border-radius:12px;}
+  .qtyPick label{margin:0; font-size:15px; font-weight:600; color:var(--paper);}
+  .qtyPick .qty button{width:40px; height:40px; font-size:20px;}
+  .qtyPick .qty input{width:64px; height:40px; font-size:17px;}
+  .qtyAvail{font-size:12px; color:var(--muted); margin-top:4px;}
+  .qtyAvail.none{color:var(--orange);}
   .cartRow .rm{appearance:none; background:transparent; border:0; color:var(--muted); font-size:24px; cursor:pointer; padding:0 2px; line-height:1;}
   .addMore{appearance:none; width:100%; background:transparent; border:0; border-top:1px solid var(--line); color:var(--orange);
     padding:12px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;}
@@ -271,6 +279,17 @@
         <div id="toolSelected" class="toolSelected" style="display:none;">
           <span id="toolSelectedName"></span>
           <button type="button" id="toolClear" aria-label="Clear selection">&times;</button>
+        </div>
+        <div id="qtyPick" style="display:none;">
+          <div class="qtyPick">
+            <label for="qtyInput">How many?</label>
+            <div class="qty">
+              <button type="button" id="qtyMinus" aria-label="Fewer">&minus;</button>
+              <input type="number" id="qtyInput" inputmode="numeric" min="1" step="1" value="1">
+              <button type="button" id="qtyPlus" aria-label="More">+</button>
+            </div>
+          </div>
+          <div class="qtyAvail" id="qtyAvail"></div>
         </div>
         <button type="button" class="addBtn" id="addToCart" style="display:none;">+ Add to list</button>
         <div class="cart" id="cart">
@@ -503,6 +522,7 @@
         : tools;
       // Reset selection when category changes
       hiddenInput.value = '';
+      showQtyPick(null);
       selectedBox.style.display = 'none';
       searchInput.style.display = 'block';
       searchInput.value = '';
@@ -553,6 +573,7 @@
       searchInput.style.display = 'none';
       results.style.display = 'none';
       document.getElementById('addToCart').style.display = 'block';
+      showQtyPick(findTool(name, activeCategory));
       updateSubmitLabel();
     }
     function clearToolSelection() {
@@ -565,16 +586,45 @@
       searchInput.value = '';
       searchInput.focus();
       document.getElementById('addToCart').style.display = 'none';
+      showQtyPick(null);
       updateSubmitLabel();
     }
     // -------- Multi-item cart --------
     // Each entry: { item, section, qty }. Shared fields (name, job, notes, due date) apply to every entry.
     let cart = [];
     function cartTotal(){ return cart.reduce((n, c) => n + c.qty, 0); }
-    function addToCart(item, section){
+    // Quantity-tracked items (delineators) check out as one row carrying a count instead of one row per piece
+    function findTool(item, section){
+      const tools = (cachedData && cachedData.tools) || [];
+      return tools.find(x => x.item === item && String(x.category||'').toLowerCase() === String(section||'').toLowerCase())
+          || tools.find(x => x.item === item) || null;
+    }
+    function isTracked(item, section){ const t = findTool(item, section); return !!(t && t.trackQuantity); }
+    function showQtyPick(t){
+      const box = document.getElementById('qtyPick');
+      if (!t || !t.trackQuantity) { box.style.display = 'none'; return; }
+      const input = document.getElementById('qtyInput');
+      input.value = 1;
+      const av = document.getElementById('qtyAvail');
+      const n = Number(t.available);
+      if (isFinite(n) && n <= 0) { av.textContent = 'None showing as available right now. The shop will confirm when you check out.'; av.className = 'qtyAvail none'; }
+      else if (isFinite(n)) { av.textContent = n + ' available'; av.className = 'qtyAvail'; }
+      else { av.textContent = ''; }
+      box.style.display = 'block';
+    }
+    function pickedQty(){
+      const n = parseInt(document.getElementById('qtyInput').value, 10);
+      return n >= 1 ? n : 1;
+    }
+    document.getElementById('qtyMinus').addEventListener('click', () => { const i = document.getElementById('qtyInput'); i.value = Math.max(1, (parseInt(i.value,10)||1) - 1); updateSubmitLabel(); });
+    document.getElementById('qtyPlus').addEventListener('click', () => { const i = document.getElementById('qtyInput'); i.value = (parseInt(i.value,10)||0) + 1; updateSubmitLabel(); });
+    document.getElementById('qtyInput').addEventListener('input', updateSubmitLabel);
+    function addToCart(item, section, qty){
+      const add = qty && qty > 0 ? qty : 1;
       const existing = cart.find(c => c.item === item && c.section === section);
-      const t = categoryTools.find(x => x.item === item);
-      if (existing) existing.qty += 1; else cart.push({ item, section, qty: 1, photoUrl: (t && t.photoUrl) || '' });
+      const t = categoryTools.find(x => x.item === item) || findTool(item, section);
+      const tracked = !!(t && t.trackQuantity);
+      if (existing) existing.qty += add; else cart.push({ item, section, qty: add, tracked, photoUrl: (t && t.photoUrl) || '' });
       renderCart();
     }
     function renderCart(){
@@ -592,7 +642,13 @@
         info.appendChild(nm); info.appendChild(sec);
         const qty = document.createElement('div'); qty.className = 'qty';
         const minus = document.createElement('button'); minus.type = 'button'; minus.textContent = '−';
-        const num = document.createElement('span'); num.textContent = c.qty;
+        let num;
+        if (c.tracked) {
+          num = document.createElement('input'); num.type = 'number'; num.inputMode = 'numeric'; num.min = '1'; num.value = c.qty;
+          num.addEventListener('change', () => { const v = parseInt(num.value, 10); if (v >= 1) { c.qty = v; } else { cart.splice(idx, 1); } renderCart(); });
+        } else {
+          num = document.createElement('span'); num.textContent = c.qty;
+        }
         const plus = document.createElement('button'); plus.type = 'button'; plus.textContent = '+';
         minus.addEventListener('click', () => { c.qty -= 1; if (c.qty <= 0) cart.splice(idx, 1); renderCart(); });
         plus.addEventListener('click', () => { c.qty += 1; renderCart(); });
@@ -609,11 +665,13 @@
     }
     // The currently selected (not yet added) tool counts as one more item at submit time
     function pendingItems(){
-      const items = cart.map(c => ({ item: c.item, section: c.section, qty: c.qty }));
+      const items = cart.map(c => ({ item: c.item, section: c.section, qty: c.qty, tracked: !!c.tracked }));
       const current = document.getElementById('tool').value;
       if (current) {
+        const tracked = isTracked(current, activeCategory);
+        const add = tracked ? pickedQty() : 1;
         const existing = items.find(c => c.item === current && c.section === activeCategory);
-        if (existing) existing.qty += 1; else items.push({ item: current, section: activeCategory, qty: 1 });
+        if (existing) existing.qty += add; else items.push({ item: current, section: activeCategory, qty: add, tracked });
       }
       return items;
     }
@@ -626,7 +684,9 @@
     document.getElementById('addToCart').addEventListener('click', () => {
       const current = document.getElementById('tool').value;
       if (!current) return;
-      addToCart(current, activeCategory);
+      const addQty = isTracked(current, activeCategory) ? pickedQty() : 1;
+      addToCart(current, activeCategory, addQty);
+      showQtyPick(null);
       // Clear the picker so they can grab the next one
       const searchInput = document.getElementById('toolSearch');
       document.getElementById('tool').value = '';
@@ -1007,7 +1067,10 @@
     // Expand the cart into one unit per row (qty 2 = two rows, each with its own checkout code)
     function expandUnits(items){
       const units = [];
-      items.forEach(c => { for (let i = 0; i < c.qty; i++) units.push({ item: c.item, section: c.section, status: 'todo' }); });
+      items.forEach(c => {
+        if (c.tracked) { units.push({ item: c.item, section: c.section, quantity: c.qty, status: 'todo' }); return; }
+        for (let i = 0; i < c.qty; i++) units.push({ item: c.item, section: c.section, quantity: 1, status: 'todo' });
+      });
       return units;
     }
     // Sends each unit to the webhook in sequence. One failure doesn't stop the rest.
@@ -1037,6 +1100,7 @@
           lat: presence && presence.lat != null ? presence.lat : null,
           lng: presence && presence.lng != null ? presence.lng : null,
           qrValue: presence && presence.qrValue ? presence.qrValue : null,
+          quantity: u.quantity || 1,
           deviceToken: HagDevice.token()
         };
         let data = null;
@@ -1053,6 +1117,7 @@
       if (b.units.some(u => u.status === 'checked_out' || u.status === 'pending')) HagDevice.claim(b.name).then(r => { if (r && r.ok === false && r.message) toast(r.message); });
       showBatchResult();
     }
+    function unitLabel(u){ return (u.quantity || 1) > 1 ? (u.quantity + ' ' + u.item) : u.item; }
     function showBatchResult(){
       const b = lastBatch;
       const out = b.units.filter(u => u.status === 'checked_out');
@@ -1069,15 +1134,15 @@
         const u = b.units[0];
         if (u.status === 'pending') {
           h2.textContent = 'Request sent';
-          line.innerHTML = 'Your request for <b>' + esc(u.item) + '</b> was sent to Alice.';
+          line.innerHTML = 'Your request for <b>' + esc(unitLabel(u)) + '</b> was sent to Alice.';
           meta.textContent = 'You will get an email and see a banner in the app once she decides.';
         } else if (u.status === 'checked_out') {
           h2.textContent = 'Checked out';
-          line.innerHTML = '<b>' + esc(u.item) + '</b> is now out to ' + esc(b.name) + '.';
+          line.innerHTML = '<b>' + esc(unitLabel(u)) + '</b> is now out to ' + esc(b.name) + '.';
           meta.textContent = dueText;
         } else {
           h2.textContent = 'Not checked out';
-          line.innerHTML = '<b>' + esc(u.item) + '</b> did not go through.';
+          line.innerHTML = '<b>' + esc(unitLabel(u)) + '</b> did not go through.';
           meta.textContent = u.message || 'Try again.';
         }
         list.style.display = 'none';
@@ -1095,7 +1160,7 @@
           const dot = document.createElement('span');
           dot.className = 'dot ' + (u.status === 'checked_out' ? 'ok' : (u.status === 'pending' ? 'pend' : 'fail'));
           const txt = document.createElement('div');
-          txt.textContent = u.item;
+          txt.textContent = unitLabel(u);
           const sm = document.createElement('small');
           sm.textContent = u.status === 'checked_out' ? 'Checked out' : (u.status === 'pending' ? 'Waiting on Alice' : ('Failed: ' + (u.message || 'no signal')));
           txt.appendChild(sm);
