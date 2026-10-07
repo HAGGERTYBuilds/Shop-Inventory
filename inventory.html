@@ -20,13 +20,21 @@
   .mark-rhino{margin-left:-4px;}
   .htitle{font-family:"Arial Narrow",Arial,sans-serif; font-weight:800; letter-spacing:.14em; text-transform:uppercase; font-size:17px;}
   .rule{height:6px; margin:0 0 22px; border-radius:4px; background:repeating-linear-gradient(135deg,var(--orange) 0 14px,#2b2b2b 14px 26px);}
+  /* Page tabs: Shop Inventory / Excess Supplies */
+  .tabs{display:flex; gap:6px; margin:0 0 22px; border-bottom:1.5px solid var(--line);}
+  .tab{appearance:none; background:none; border:0; border-bottom:3px solid transparent; margin-bottom:-1.5px; color:var(--muted); font-family:"Arial Narrow",Arial,sans-serif; font-weight:800; letter-spacing:.1em; text-transform:uppercase; font-size:15px; padding:12px 14px; cursor:pointer;}
+  .tab small{font-family:Calibri,"Segoe UI",system-ui,sans-serif; font-weight:400; letter-spacing:0; text-transform:none; font-size:13px; margin-left:6px;}
+  .tab.on{color:var(--paper); border-bottom-color:var(--orange);}
+  .tab:focus-visible{outline:2px solid var(--orange); outline-offset:2px;}
   .lead{font-family:Georgia,serif; font-size:24px; margin:0 0 6px;}
   .sub{color:var(--muted); margin:0 0 18px; font-size:14px;}
+  .sub a{color:var(--orange);}
   .bar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:22px;}
   .bar input{flex:1; min-width:200px; background:var(--field); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; font-size:16px; font-family:inherit;}
   .bar input:focus{outline:none; border-color:var(--orange);}
   .chip{appearance:none; border:1.5px solid var(--gray); background:transparent; color:var(--paper); border-radius:999px; padding:9px 14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer;}
   .chip.on{background:var(--orange); border-color:var(--orange); color:var(--ink);}
+  #chips{display:contents;}
   .stats{display:flex; flex-wrap:wrap; gap:16px; color:var(--muted); font-size:14px; margin-bottom:22px;}
   .stats b{color:var(--paper);}
   h2{font-family:"Arial Narrow",Arial,sans-serif; font-weight:800; letter-spacing:.1em; text-transform:uppercase; font-size:15px; color:var(--orange); margin:28px 0 12px; display:flex; align-items:baseline; gap:10px;}
@@ -34,13 +42,18 @@
   .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px;}
   .card{background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; display:flex; flex-direction:column;}
   .card.nophoto{border-style:dashed; border-color:#555;}
+  .card.gone .nm,.card.gone .sz{color:var(--muted);}
   .ph{aspect-ratio:4/3; background:#1e1e1e; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; overflow:hidden;}
   .ph img{width:100%; height:100%; object-fit:cover; display:block;}
   .ph.missing{background:repeating-linear-gradient(135deg,#262626 0 10px,#2d2d2d 10px 20px); font-weight:700; letter-spacing:.06em; text-transform:uppercase; font-size:12px;}
   .body{padding:12px 14px 14px;}
   .nm{font-size:16px; font-weight:700; line-height:1.25; margin-bottom:4px;}
+  .sz{font-size:14px; color:#dcdcdc; margin-bottom:4px;}
   .meta{font-size:12px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap;}
   .meta .code{font-family:Consolas,monospace;}
+  .qty{font-size:14px; font-weight:700; color:var(--green); margin-top:8px;}
+  .qty.zero{color:var(--red);}
+  .qty.unk{color:var(--muted); font-weight:400; font-style:italic;}
   .notes{font-size:13px; color:#c9c9c9; margin-top:6px; line-height:1.35;}
   .out{display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--orange);}
   .empty{color:var(--muted); font-style:italic; padding:30px; text-align:center;}
@@ -64,28 +77,36 @@
   .modal label{display:block; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px;}
   .modal input,.modal select,.modal textarea{width:100%; background:var(--field); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:13px 14px; font-size:16px; font-family:inherit;}
   .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none; border-color:var(--orange);}
+  .modal .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  body[data-page="tools"] .modal .row2{grid-template-columns:1fr;}
   .modal .photoBtn{width:100%; margin-top:6px; appearance:none; border:1.5px dashed var(--gray); background:transparent; color:var(--paper); border-radius:12px; padding:13px; font-size:15px; font-family:inherit; cursor:pointer;}
   .modal .photoBtn.has{border-style:solid; border-color:var(--green); color:var(--green);}
   .modal .buttons{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
   .modal .go{appearance:none; border:0; border-radius:12px; padding:15px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; background:var(--orange); color:var(--ink);}
   .modal .go:disabled{opacity:.5;}
   .modal .cancel{appearance:none; border:1.5px solid var(--gray); border-radius:12px; padding:15px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; background:transparent; color:var(--paper);}
+  .modal .danger{appearance:none; border:0; background:none; color:var(--red); font-size:13px; text-decoration:underline; font-family:inherit; cursor:pointer; padding:6px; display:none;}
+  /* Fields that only apply to one page */
+  .sOnly{display:none;}
+  body[data-page="surplus"] .sOnly{display:block;}
+  body[data-page="surplus"] .tOnly{display:none;}
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--card); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:12px 18px; font-size:14px; opacity:0; transition:.2s; z-index:90; pointer-events:none; max-width:92%;}
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
   .toast.ok{border-color:var(--green);} .toast.bad{border-color:var(--red);}
+  @media (max-width:480px){ .tab{font-size:13px; padding:12px 8px; letter-spacing:.06em;} .tab small{display:none;} }
   @media print{
     body{background:#fff; color:#111;}
-    .bar,.back{display:none !important;}
+    .bar,.back,.tabs{display:none !important;}
     .card{break-inside:avoid; border-color:#ccc; background:#fff;}
     .ph{background:#f2f2f2; color:#666;}
     .ph.missing{background:#f2f2f2;}
-    .nm{color:#111;} .meta,.notes,.stats,.sub{color:#444;} .stats b{color:#111;}
+    .nm{color:#111;} .meta,.notes,.stats,.sub,.sz{color:#444;} .stats b{color:#111;}
     h2{color:#c56a10;}
     .grid{grid-template-columns:repeat(4, 1fr);}
   }
 </style>
 </head>
-<body>
+<body data-page="tools">
   <main class="wrap">
     <div class="top">
       <a class="back" href="index.html" aria-label="Back to home">
@@ -97,13 +118,15 @@
       <span class="adminTag">Editing</span>
     </div>
     <div class="rule"></div>
-    <p class="lead">Everything in the system right now</p>
-    <p class="sub">Live from the tracker. Dashed cards have no photo yet. Anything you don't see here isn't in the system.</p>
+    <div class="tabs" role="tablist">
+      <button class="tab on" type="button" role="tab" data-page="tools" aria-selected="true">Shop Inventory<small id="tabToolsN"></small></button>
+      <button class="tab" type="button" role="tab" data-page="surplus" aria-selected="false">Excess Supplies<small id="tabSurplusN"></small></button>
+    </div>
+    <p class="lead" id="lead"></p>
+    <p class="sub" id="sub"></p>
     <div class="bar">
       <input type="search" id="q" placeholder="Search items…" autocomplete="off">
-      <button class="chip on" data-f="all">All</button>
-      <button class="chip" data-f="nophoto">No photo</button>
-      <button class="chip" data-f="out">Checked out</button>
+      <span id="chips"></span>
       <button class="chip" id="printBtn" type="button">Print</button>
       <button class="chip" id="addBtn" type="button">+ Add item</button>
     </div>
@@ -116,18 +139,25 @@
     <div class="box">
       <h3 id="mTitle">Add an item</h3>
       <label for="mName">Name</label>
-      <input id="mName" placeholder="e.g. Milwaukee Packout Rolling Box" autocomplete="off">
+      <input id="mName" autocomplete="off">
+      <div class="row2 sOnly" style="display:none;" id="mSizeLoc">
+        <div><label for="mSize">Size <span style="text-transform:none; font-weight:400;">(optional)</span></label><input id="mSize" placeholder="e.g. 16D, 3 1/2 in" autocomplete="off"></div>
+        <div><label for="mLoc">Location</label><input id="mLoc" placeholder="e.g. Row 2" autocomplete="off"></div>
+      </div>
       <label for="mCat">Category</label>
       <select id="mCat"></select>
-      <label for="mQty">Quantity</label>
-      <input id="mQty" type="number" min="0" inputmode="numeric" value="1">
+      <div class="row2">
+        <div><label for="mQty" id="mQtyLabel">Quantity</label><input id="mQty" type="number" min="0" inputmode="numeric" value="1"></div>
+        <div class="sOnly"><label for="mUnit">Unit</label><select id="mUnit"><option value="each">each</option><option value="box">box</option><option value="bin">bin</option><option value="bucket">bucket</option><option value="roll">roll</option><option value="bag">bag</option><option value="sheet">sheet</option><option value="stick">stick</option></select></div>
+      </div>
       <label for="mNotes">Notes <span style="text-transform:none; font-weight:400;">(optional)</span></label>
-      <textarea id="mNotes" rows="2" placeholder="Brand, size, where it lives..."></textarea>
+      <textarea id="mNotes" rows="2"></textarea>
       <label id="mPhotoLabel">Photo <span style="text-transform:none; font-weight:400;">(optional, you can add it later)</span></label>
       <button type="button" class="photoBtn" id="mPhotoBtn">Take a photo</button>
       <div class="buttons">
         <button type="button" class="go" id="mGo">Add to inventory</button>
         <button type="button" class="cancel" id="mCancel">Cancel</button>
+        <button type="button" class="danger" id="mRetire">Remove from the list (used up or gone)</button>
       </div>
     </div>
   </div>
@@ -137,18 +167,42 @@
     const PHOTO_BASE = SUPABASE_URL + "/storage/v1/object/public/tool-photos/";
     const H = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
     const CAT_ORDER = ['Equipment','Power Tools','Lighting','Rigging','Ladders','Safety','Tools','Landscaping','Cleaning','Large Grey Bins','Pallets'];
-    let tools = [], outBy = {}, filter = 'all', q = '';
+    const SURPLUS_CAT_ORDER = ['Nails','Screws','Fasteners & Hardware','Electrical','Plumbing','Paint & Chemicals','Adhesives & Tape','Building Materials'];
+    let tools = [], outBy = {}, surplus = [], filter = 'all', q = '';
+    let toolsErr = false, surplusErr = false, toolsLoaded = false, surplusLoaded = false;
+    // ---- Which page: Shop Inventory (default) or Excess Supplies (?page=surplus or #surplus) ----
+    const PARAMS = new URLSearchParams(location.search);
+    let page = (PARAMS.get('page') === 'surplus' || location.hash === '#surplus') ? 'surplus' : 'tools';
     // ---- Admin mode: open with ?key=... to add photos, add items, and fix counts ----
-    const ADMIN_KEY = (new URLSearchParams(location.search).get('key') || '').trim();
+    const ADMIN_KEY = (PARAMS.get('key') || '').trim();
     const ADMIN = !!ADMIN_KEY;
     const UPLOAD_URL = "https://haggertybuilds.app.n8n.cloud/webhook/sb-tool-photo-upload";
     const ADMIN_URL  = "https://haggertybuilds.app.n8n.cloud/webhook/sb-tool-admin";
     const MAX_SIDE = 1200, JPEG_Q = 0.82;
     if (ADMIN) document.body.classList.add('admin');
+    const PAGES = {
+      tools: {
+        lead: 'Everything in the system right now',
+        sub: "Live from the tracker. Dashed cards have no photo yet. Anything you don't see here isn't in the system.",
+        search: 'Search items…',
+        chips: [['all','All'],['nophoto','No photo'],['out','Checked out']]
+      },
+      surplus: {
+        lead: 'Excess supplies in the warehouse',
+        sub: 'Leftover stock from past jobs, free to use on any job. Check here before you buy. Taking some? Log it on the <a href="surplus.html">Surplus Materials</a> page so the count stays right.',
+        search: 'Search supplies…',
+        chips: [['all','All'],['instock','In stock'],['nophoto','No photo']]
+      }
+    };
     let toastT;
     function toast(msg, kind){ const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show' + (kind ? ' ' + kind : ''); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800); }
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    async function load(){
+    function unitLabel(n, u){ if (!u || u === 'each') return String(n); return n + ' ' + u + (n === 1 ? '' : (u.endsWith('x') ? 'es' : 's')); }
+    const photoHtml = t => t.photo_path
+      ? '<div class="ph"><img src="' + PHOTO_BASE + encodeURIComponent(t.photo_path) + '" alt="" loading="lazy" onerror="this.parentNode.className=\'ph missing\';this.parentNode.textContent=\'Photo missing\'"></div>'
+      : '<div class="ph missing">No photo yet</div>';
+
+    async function loadTools(){
       try {
         const [tRes, cRes] = await Promise.all([
           fetch(SUPABASE_URL + '/rest/v1/shop_tools?select=item_code,item_name,category,quantity,notes,photo_path&active=eq.true&order=category,item_name', { headers: H, cache: 'no-store' }),
@@ -159,12 +213,58 @@
         if (!Array.isArray(tools)) throw new Error('bad');
         outBy = {};
         (Array.isArray(co) ? co : []).forEach(c => { const k = c.item_name; (outBy[k] = outBy[k] || []).push((c.people && c.people.name) || 'someone'); });
-        render();
-      } catch(e) {
-        document.getElementById('content').innerHTML = '<div class="err">Could not load the inventory. Check your signal and refresh.</div>';
-      }
+      } catch(e) { tools = []; toolsErr = true; }
+      toolsLoaded = true; render();
     }
+    async function loadSurplus(){
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/surplus_materials?select=item_code,item_name,category,size,location,quantity,unit,count_verified,notes,photo_path&active=eq.true&order=category,item_name,size', { headers: H, cache: 'no-store' });
+        surplus = await res.json();
+        if (!Array.isArray(surplus)) throw new Error('bad');
+      } catch(e) { surplus = []; surplusErr = true; }
+      surplusLoaded = true; render();
+    }
+
+    // ---- Page switching ----
+    function setPage(p, push){
+      page = p; filter = 'all'; q = ''; document.getElementById('q').value = '';
+      document.body.dataset.page = p;
+      const cfg = PAGES[p];
+      document.getElementById('lead').textContent = cfg.lead;
+      document.getElementById('sub').innerHTML = cfg.sub;
+      document.getElementById('q').placeholder = cfg.search;
+      document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.page === p; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      document.getElementById('chips').innerHTML = cfg.chips.map((c, i) => '<button class="chip' + (i === 0 ? ' on' : '') + '" type="button" data-f="' + c[0] + '">' + c[1] + '</button>').join('');
+      document.querySelectorAll('#chips .chip').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll('#chips .chip').forEach(x => x.classList.remove('on'));
+        b.classList.add('on'); filter = b.dataset.f; render();
+      }));
+      if (push) {
+        const sp = new URLSearchParams(location.search);
+        if (p === 'surplus') sp.set('page', 'surplus'); else sp.delete('page');
+        const qs = sp.toString();
+        try { history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '')); } catch(e) {}
+      }
+      // Keep the admin key on the link to the take page
+      if (ADMIN) document.querySelectorAll('#sub a[href="surplus.html"]').forEach(a => a.href = 'surplus.html?key=' + encodeURIComponent(ADMIN_KEY));
+      render();
+    }
+    document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => setPage(b.dataset.page, true)));
+
     function render(){
+      if (toolsLoaded) document.getElementById('tabToolsN').textContent = tools.length;
+      if (surplusLoaded) document.getElementById('tabSurplusN').textContent = surplus.length;
+      if (page === 'surplus') renderSurplus(); else renderTools();
+    }
+    function grouped(list, order){
+      const cats = {};
+      list.forEach(t => (cats[t.category] = cats[t.category] || []).push(t));
+      return { cats, order: order.filter(c => cats[c]).concat(Object.keys(cats).filter(c => !order.includes(c)).sort()) };
+    }
+    function renderTools(){
+      const el = document.getElementById('content');
+      if (!toolsLoaded) { el.innerHTML = '<div class="empty">Loading…</div>'; document.getElementById('stats').innerHTML = ''; return; }
+      if (toolsErr) { el.innerHTML = '<div class="err">Could not load the inventory. Check your signal and refresh.</div>'; return; }
       const ql = q.toLowerCase();
       const list = tools.filter(t => {
         if (filter === 'nophoto' && t.photo_path) return false;
@@ -176,33 +276,69 @@
       const units = tools.reduce((n, t) => n + (Number(t.quantity) || 0), 0);
       document.getElementById('stats').innerHTML =
         '<span><b>' + tools.length + '</b> line items</span><span><b>' + units + '</b> units</span><span><b>' + withPhoto + '</b> with photos</span><span><b>' + (tools.length - withPhoto) + '</b> without</span><span><b>' + Object.keys(outBy).length + '</b> items out</span>';
-      const cats = {};
-      list.forEach(t => (cats[t.category] = cats[t.category] || []).push(t));
-      const order = CAT_ORDER.filter(c => cats[c]).concat(Object.keys(cats).filter(c => !CAT_ORDER.includes(c)).sort());
-      const el = document.getElementById('content');
+      const { cats, order } = grouped(list, CAT_ORDER);
       if (!order.length) { el.innerHTML = '<div class="empty">Nothing matches.</div>'; return; }
       el.innerHTML = order.map(c => '<h2>' + esc(c) + ' <small>' + cats[c].length + ' item' + (cats[c].length === 1 ? '' : 's') + '</small></h2><div class="grid">'
         + cats[c].map(t => {
           const out = outBy[t.item_name];
-          return '<div class="card' + (t.photo_path ? '' : ' nophoto') + '">'
-            + (t.photo_path ? '<div class="ph"><img src="' + PHOTO_BASE + encodeURIComponent(t.photo_path) + '" alt="" loading="lazy" onerror="this.parentNode.className=\'ph missing\';this.parentNode.textContent=\'Photo missing\'"></div>' : '<div class="ph missing">No photo yet</div>')
+          return '<div class="card' + (t.photo_path ? '' : ' nophoto') + '" data-code="' + esc(t.item_code) + '">'
+            + photoHtml(t)
             + '<div class="body"><div class="nm">' + esc(t.item_name) + '</div>'
             + '<div class="meta"><span class="code">' + esc(t.item_code) + '</span><span>Qty ' + esc(t.quantity) + '</span></div>'
             + (t.notes ? '<div class="notes">' + esc(t.notes) + '</div>' : '')
             + (out ? '<span class="out">Out: ' + esc(out.join(', ')) + '</span>' : '')
-            + '<br><button type="button" class="editLink" data-code="' + esc(t.item_code) + '">Edit count / notes</button>'
+            + '<br><button type="button" class="editLink">Edit count / notes</button>'
             + '</div></div>';
         }).join('') + '</div>').join('');
-      if (ADMIN) {
-        el.querySelectorAll('.card').forEach((card, i) => {
-          const code = card.querySelector('.editLink').dataset.code;
-          const t = tools.find(x => x.item_code === code);
-          card.querySelector('.ph').addEventListener('click', () => pickPhoto(t, card));
-          card.querySelector('.editLink').addEventListener('click', () => openEdit(t));
-        });
-      }
+      wireAdmin(el, tools);
     }
-    // ---- Photo upload (same webhook as photos.html) ----
+    function renderSurplus(){
+      const el = document.getElementById('content');
+      if (!surplusLoaded) { el.innerHTML = '<div class="empty">Loading…</div>'; document.getElementById('stats').innerHTML = ''; return; }
+      if (surplusErr) { el.innerHTML = '<div class="err">Could not load the excess supplies list. Check your signal and refresh.</div>'; return; }
+      const ql = q.toLowerCase();
+      const avail = t => t.quantity > 0 || !t.count_verified;
+      const list = surplus.filter(t => {
+        if (filter === 'instock' && !avail(t)) return false;
+        if (filter === 'nophoto' && t.photo_path) return false;
+        if (ql && !((t.item_name + ' ' + (t.size||'') + ' ' + (t.location||'') + ' ' + t.category + ' ' + (t.notes||'') + ' ' + t.item_code).toLowerCase().includes(ql))) return false;
+        return true;
+      });
+      const unk = surplus.filter(t => !t.count_verified).length;
+      const withPhoto = surplus.filter(t => t.photo_path).length;
+      document.getElementById('stats').innerHTML =
+        '<span><b>' + surplus.length + '</b> materials</span><span><b>' + surplus.filter(avail).length + '</b> available</span>'
+        + (unk ? '<span><b>' + unk + '</b> not yet counted</span>' : '')
+        + '<span><b>' + withPhoto + '</b> with photos</span>';
+      const { cats, order } = grouped(list, SURPLUS_CAT_ORDER);
+      if (!order.length) { el.innerHTML = '<div class="empty">' + (surplus.length ? 'Nothing matches.' : 'No excess supplies listed yet.') + '</div>'; return; }
+      el.innerHTML = order.map(c => '<h2>' + esc(c) + ' <small>' + cats[c].length + ' item' + (cats[c].length === 1 ? '' : 's') + '</small></h2><div class="grid">'
+        + cats[c].map(t => {
+          const gone = t.count_verified && t.quantity <= 0;
+          const qtyHtml = !t.count_verified ? '<div class="qty unk">Count not yet taken</div>'
+            : gone ? '<div class="qty zero">None left</div>'
+            : '<div class="qty">' + esc(unitLabel(t.quantity, t.unit)) + ' available</div>';
+          return '<div class="card' + (t.photo_path ? '' : ' nophoto') + (gone ? ' gone' : '') + '" data-code="' + esc(t.item_code) + '">'
+            + photoHtml(t)
+            + '<div class="body"><div class="nm">' + esc(t.item_name) + '</div>'
+            + (t.size ? '<div class="sz">' + esc(t.size) + '</div>' : '')
+            + '<div class="meta"><span class="code">' + esc(t.item_code) + '</span>' + (t.location ? '<span>' + esc(t.location) + '</span>' : '') + '</div>'
+            + qtyHtml
+            + (t.notes ? '<div class="notes">' + esc(t.notes) + '</div>' : '')
+            + '<button type="button" class="editLink">Edit</button>'
+            + '</div></div>';
+        }).join('') + '</div>').join('');
+      wireAdmin(el, surplus);
+    }
+    function wireAdmin(el, rows){
+      if (!ADMIN) return;
+      el.querySelectorAll('.card').forEach(card => {
+        const t = rows.find(x => x.item_code === card.dataset.code); if (!t) return;
+        card.querySelector('.ph').addEventListener('click', () => pickPhoto(t, card));
+        card.querySelector('.editLink').addEventListener('click', () => openEdit(t));
+      });
+    }
+    // ---- Photo upload (same webhook as photos.html; SM- codes land on surplus_materials) ----
     let pendingPhoto = null;   // { t, card } for a card tap, or { forModal:true } for the add form
     let modalPhotoB64 = null;
     function pickPhoto(t, card){ pendingPhoto = { t, card }; const p = document.getElementById('picker'); p.value = ''; p.click(); }
@@ -241,57 +377,88 @@
       c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
       return c.toDataURL('image/jpeg', JPEG_Q).split(',')[1];
     }
-    // ---- Add / edit modal ----
-    let editing = null;   // null = adding, else the tool being edited
+    // ---- Add / edit modal (fields follow the page you are on) ----
+    let editing = null;   // null = adding, else the row being edited
+    let retireArmed = false;
+    const $ = id => document.getElementById(id);
     function fillCats(){
-      const sel = document.getElementById('mCat');
-      const cats = CAT_ORDER.slice(); tools.forEach(t => { if (!cats.includes(t.category)) cats.push(t.category); });
-      sel.innerHTML = cats.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+      const isS = page === 'surplus';
+      const cats = (isS ? SURPLUS_CAT_ORDER : CAT_ORDER).slice();
+      (isS ? surplus : tools).forEach(t => { if (!cats.includes(t.category)) cats.push(t.category); });
+      $('mCat').innerHTML = cats.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+    }
+    function setModalCopy(){
+      const isS = page === 'surplus';
+      $('mSizeLoc').style.display = isS ? 'grid' : 'none';
+      $('mName').placeholder = isS ? 'e.g. Common Nails' : 'e.g. Milwaukee Packout Rolling Box';
+      $('mNotes').placeholder = isS ? 'Brand, condition, where it came from...' : 'Brand, size, where it lives...';
+      $('mQtyLabel').textContent = isS ? 'Count' : 'Quantity';
+      retireArmed = false; $('mRetire').textContent = 'Remove from the list (used up or gone)';
     }
     function openAdd(){
-      editing = null; modalPhotoB64 = null; fillCats();
-      document.getElementById('mTitle').textContent = 'Add an item';
-      document.getElementById('mName').value = ''; document.getElementById('mQty').value = 1; document.getElementById('mNotes').value = '';
-      document.getElementById('mCat').disabled = false;
-      document.getElementById('mPhotoLabel').style.display = ''; const pb = document.getElementById('mPhotoBtn'); pb.style.display = ''; pb.textContent = 'Take a photo'; pb.classList.remove('has');
-      document.getElementById('mGo').textContent = 'Add to inventory'; document.getElementById('mGo').disabled = false;
-      document.getElementById('modal').classList.add('show');
-      setTimeout(() => document.getElementById('mName').focus(), 80);
+      editing = null; modalPhotoB64 = null; fillCats(); setModalCopy();
+      const isS = page === 'surplus';
+      $('mTitle').textContent = isS ? 'Add an excess supply' : 'Add an item';
+      $('mName').value = ''; $('mQty').value = isS ? 0 : 1; $('mNotes').value = '';
+      $('mSize').value = ''; $('mLoc').value = ''; $('mUnit').value = 'each';
+      $('mCat').disabled = false;
+      $('mPhotoLabel').style.display = ''; const pb = $('mPhotoBtn'); pb.style.display = ''; pb.textContent = 'Take a photo'; pb.classList.remove('has');
+      $('mRetire').style.display = 'none';
+      $('mGo').textContent = isS ? 'Add to the list' : 'Add to inventory'; $('mGo').disabled = false;
+      $('modal').classList.add('show');
+      setTimeout(() => $('mName').focus(), 80);
     }
     function openEdit(t){
-      editing = t; fillCats();
-      document.getElementById('mTitle').textContent = 'Edit ' + t.item_code;
-      document.getElementById('mName').value = t.item_name; document.getElementById('mCat').value = t.category; document.getElementById('mCat').disabled = true;
-      document.getElementById('mQty').value = t.quantity; document.getElementById('mNotes').value = t.notes || '';
-      document.getElementById('mPhotoLabel').style.display = 'none'; document.getElementById('mPhotoBtn').style.display = 'none';
-      document.getElementById('mGo').textContent = 'Save changes'; document.getElementById('mGo').disabled = false;
-      document.getElementById('modal').classList.add('show');
+      editing = t; fillCats(); setModalCopy();
+      const isS = page === 'surplus';
+      $('mTitle').textContent = 'Edit ' + t.item_code;
+      $('mName').value = t.item_name; $('mCat').value = t.category; $('mCat').disabled = !isS;
+      // An uncounted supply shows a blank count, so saving other fields does not mark it as zero
+      $('mQty').value = (isS && !t.count_verified) ? '' : t.quantity; $('mNotes').value = t.notes || '';
+      if (isS) { $('mSize').value = t.size || ''; $('mLoc').value = t.location || ''; $('mUnit').value = t.unit || 'each'; }
+      $('mPhotoLabel').style.display = 'none'; $('mPhotoBtn').style.display = 'none';
+      $('mRetire').style.display = isS ? 'block' : 'none';
+      $('mGo').textContent = 'Save changes'; $('mGo').disabled = false;
+      $('modal').classList.add('show');
     }
-    function closeModal(){ document.getElementById('modal').classList.remove('show'); editing = null; modalPhotoB64 = null; }
-    document.getElementById('addBtn').addEventListener('click', openAdd);
-    document.getElementById('mCancel').addEventListener('click', closeModal);
-    document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
-    document.getElementById('mPhotoBtn').addEventListener('click', () => { pendingPhoto = { forModal: true }; const p = document.getElementById('picker'); p.value = ''; p.click(); });
-    document.getElementById('mGo').addEventListener('click', async () => {
-      const name = document.getElementById('mName').value.trim();
-      const category = document.getElementById('mCat').value;
-      const quantity = document.getElementById('mQty').value;
-      const notes = document.getElementById('mNotes').value.trim();
+    function closeModal(){ $('modal').classList.remove('show'); editing = null; modalPhotoB64 = null; }
+    async function adminCall(body){
+      const res = await fetch(ADMIN_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.assign({ token: ADMIN_KEY }, body)) });
+      const data = await res.json().catch(() => null);
+      if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not save');
+      return data;
+    }
+    $('addBtn').addEventListener('click', openAdd);
+    $('mCancel').addEventListener('click', closeModal);
+    $('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+    $('mPhotoBtn').addEventListener('click', () => { pendingPhoto = { forModal: true }; const p = $('picker'); p.value = ''; p.click(); });
+    $('mGo').addEventListener('click', async () => {
+      const isS = page === 'surplus';
+      const name = $('mName').value.trim();
+      const category = $('mCat').value;
+      const quantity = $('mQty').value;
+      const notes = $('mNotes').value.trim();
       if (!name) { toast('Give it a name', 'bad'); return; }
-      const btn = document.getElementById('mGo'); btn.disabled = true; btn.textContent = 'Saving…';
+      const btn = $('mGo'); btn.disabled = true; btn.textContent = 'Saving…';
+      const addLabel = isS ? 'Add to the list' : 'Add to inventory';
       try {
-        const body = editing
-          ? { token: ADMIN_KEY, action: 'update', itemCode: editing.item_code, name, quantity, notes }
-          : { token: ADMIN_KEY, action: 'add', name, category, quantity, notes };
-        const res = await fetch(ADMIN_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-        const data = await res.json().catch(() => null);
-        if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not save');
+        let body;
+        if (isS) {
+          const extra = { name, category, quantity, unit: $('mUnit').value, size: $('mSize').value.trim(), location: $('mLoc').value.trim(), notes };
+          body = editing ? Object.assign({ action: 'surplus_update', itemCode: editing.item_code }, extra) : Object.assign({ action: 'surplus_add' }, extra);
+        } else {
+          body = editing ? { action: 'update', itemCode: editing.item_code, name, quantity, notes } : { action: 'add', name, category, quantity, notes };
+        }
+        const data = await adminCall(body);
+        const fields = isS
+          ? { item_name: data.item_name, category: data.category, size: data.size, location: data.location, quantity: data.quantity, unit: data.unit, notes: data.notes, count_verified: data.count_verified }
+          : { item_name: data.item_name, quantity: data.quantity, notes: data.notes };
         if (editing) {
-          Object.assign(editing, { item_name: data.item_name, quantity: data.quantity, notes: data.notes });
+          Object.assign(editing, fields);
           toast(data.item_code + ' updated', 'ok');
         } else {
-          const t = { item_code: data.item_code, item_name: data.item_name, category: data.category, quantity: data.quantity, notes: data.notes, photo_path: null };
-          tools.push(t);
+          const t = Object.assign({ item_code: data.item_code, category: data.category, photo_path: null }, fields);
+          (isS ? surplus : tools).push(t);
           if (modalPhotoB64) {
             btn.textContent = 'Uploading photo…';
             try { await uploadPhoto(t.item_code, modalPhotoB64); t.photo_path = t.item_code.toLowerCase() + '.jpg'; }
@@ -302,16 +469,28 @@
         closeModal(); render();
       } catch(err) {
         toast(err.message || 'Could not save', 'bad');
-        btn.disabled = false; btn.textContent = editing ? 'Save changes' : 'Add to inventory';
+        btn.disabled = false; btn.textContent = editing ? 'Save changes' : addLabel;
       }
     });
-    document.getElementById('q').addEventListener('input', e => { q = e.target.value.trim(); render(); });
-    document.querySelectorAll('.chip[data-f]').forEach(b => b.addEventListener('click', () => {
-      document.querySelectorAll('.chip[data-f]').forEach(x => x.classList.remove('on'));
-      b.classList.add('on'); filter = b.dataset.f; render();
-    }));
-    document.getElementById('printBtn').addEventListener('click', () => window.print());
-    load();
+    // Remove an excess supply from the list. First tap arms it, second tap confirms.
+    $('mRetire').addEventListener('click', async () => {
+      if (!editing || page !== 'surplus') return;
+      const btn = $('mRetire');
+      if (!retireArmed) { retireArmed = true; btn.textContent = 'Tap again to remove ' + editing.item_code; return; }
+      btn.disabled = true;
+      try {
+        const gone = editing;
+        await adminCall({ action: 'surplus_update', itemCode: gone.item_code, active: false });
+        surplus = surplus.filter(x => x !== gone);
+        toast(gone.item_name + ' removed from the list', 'ok');
+        closeModal(); render();
+      } catch(err) { toast(err.message || 'Could not remove it', 'bad'); }
+      btn.disabled = false;
+    });
+    $('q').addEventListener('input', e => { q = e.target.value.trim(); render(); });
+    $('printBtn').addEventListener('click', () => window.print());
+    setPage(page, false);
+    loadTools(); loadSurplus();
   </script>
 </body>
 </html>
