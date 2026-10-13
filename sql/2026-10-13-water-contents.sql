@@ -2,7 +2,7 @@
 -- Contents is the consumables system (stock goes down on Take, up on Restock, every move logged
 -- in contents_log, low stock flagged on the dashboard). Taking from it normally needs
 -- people.contents_approved; items marked open_to_all can be taken by anyone. Restock stays approved-only.
--- Safe to run more than once.
+-- Also adds admin_restock_contents for the dashboard "Add stock" box. Safe to run more than once.
 
 alter table public.contents add column if not exists open_to_all boolean not null default false;
 
@@ -92,6 +92,42 @@ begin
   end loop;
 
   return jsonb_build_object('ok', true, 'itemCount', v_count, 'errors', to_jsonb(v_errors));
+end;
+$function$;
+
+-- Dashboard "Add stock" for Ahren: adds to any Contents item with the admin key, logged as a Restock.
+create or replace function public.admin_restock_contents(p_token text, p_editor text, p_item_code text, p_quantity integer, p_note text default null)
+ returns jsonb
+ language plpgsql
+ security definer
+as $function$
+declare
+  v_row public.contents%rowtype;
+  v_qty int := coalesce(p_quantity, 0);
+  v_new int;
+  v_pid uuid;
+begin
+  if not public.admin_check_key(p_token) then
+    return jsonb_build_object('ok', false, 'error', 'unauthorized', 'message', 'Access key not accepted.');
+  end if;
+  if v_qty <= 0 then
+    return jsonb_build_object('ok', false, 'error', 'bad_quantity', 'message', 'Enter how many to add.');
+  end if;
+  select * into v_row from public.contents where item_code = upper(btrim(coalesce(p_item_code, ''))) and active for update;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'not_found', 'message', 'Item not found.');
+  end if;
+  v_new := v_row.quantity + v_qty;
+  update public.contents set quantity = v_new, updated_at = now() where id = v_row.id;
+  select id into v_pid from public.people where lower(name) = lower(btrim(coalesce(p_editor, ''))) limit 1;
+  insert into public.contents_log
+    (log_code, contents_id, item_code, item_name, person_id, person_name,
+     action, quantity_change, quantity_after, notes, logged_at)
+  values
+    ('CL-' || extract(epoch from clock_timestamp())::bigint || '-' || floor(random()*1000)::int,
+     v_row.id, v_row.item_code, v_row.item_name, v_pid, nullif(btrim(coalesce(p_editor, '')), ''),
+     'Restock', v_qty, v_new, coalesce(nullif(btrim(coalesce(p_note, '')), ''), 'Added from dashboard'), now());
+  return jsonb_build_object('ok', true, 'item_code', v_row.item_code, 'item_name', v_row.item_name, 'quantity', v_new);
 end;
 $function$;
 
