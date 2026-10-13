@@ -60,6 +60,17 @@
   .addBtn{appearance:none; background:var(--orange); border:0; color:var(--ink); border-radius:8px; padding:9px 14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; margin-left:auto;}
   .adminNote{color:var(--muted); font-size:13px; margin:14px 0 0;}
   .adminNote a{color:var(--orange);}
+  .stockCard{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:20px; margin-bottom:14px;}
+  .stockCard.low{border-color:rgba(230,180,34,.5);}
+  .stockCard h3{margin:0 0 4px; font-size:17px;}
+  .stockCard .onHand{font-size:34px; font-weight:800; margin:6px 0 2px;}
+  .stockCard .onHand small{font-size:15px; font-weight:600; color:var(--muted); margin-left:6px;}
+  .stockCard .sub{color:var(--muted); font-size:13px;}
+  .stockAdd{display:flex; gap:10px; margin-top:16px;}
+  .stockAdd input{flex:1; min-width:0; background:var(--bg); color:var(--paper); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; font-size:16px; font-family:inherit;}
+  .stockAdd input:focus{outline:none; border-color:var(--orange);}
+  .stockAdd button{appearance:none; border:0; border-radius:12px; padding:12px 18px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; background:var(--orange); color:var(--ink); white-space:nowrap;}
+  .stockAdd button:disabled{opacity:.5;}
   .modal{position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:80; display:none; align-items:center; justify-content:center; padding:20px;}
   .modal.show{display:flex;}
   .modal .box{background:var(--bg); border:1.5px solid var(--line); border-radius:16px; padding:24px; max-width:460px; width:100%; max-height:92vh; overflow:auto;}
@@ -529,6 +540,7 @@
       if (view === 'activity') return renderAhrenActivity(body);
       if (view === 'transfers') return renderAhrenTransfers(body);
       if (view === 'phones') return renderAhrenPhones(body);
+      if (view === 'water') return renderAhrenWater(body);
       renderAhrenHome(body);
     }
     function renderAhrenHome(body){
@@ -541,6 +553,7 @@
         + tile('overdue', 'Overdue', s.overdueCount, s.overdueCount === 0 ? 'none' : (s.overdueCount + ' late'), s.overdueCount > 0 ? 'hot' : '', iconLate())
         + tile('activity', 'Activity', (currentData.recentReturns.length + currentData.activeCheckouts.filter(c => c.checkOut).length), 'last 24h', '', iconActivity())
         + tile('transfers', 'Handoffs waiting', (s.pendingTransferCount || 0), (s.staleTransferCount || 0) > 0 ? (s.staleTransferCount + ' over 24h') : 'none stuck', (s.staleTransferCount || 0) > 0 ? 'hot' : '', iconActivity())
+        + waterTile()
         + (ADMIN ? tile('phones', 'Linked phones', '', 'who is linked, unlink lost phones', '', iconEquipment()) : '');
       body.appendChild(tiles);
     }
@@ -565,6 +578,51 @@
       }).join('');
       body.appendChild(fromHtml('<div class="tableWrap"><table><thead><tr><th>Item</th><th>From</th><th>To</th><th>Where</th><th>Note</th><th>Waiting</th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
       body.appendChild(fromHtml('<p style="color:var(--muted);font-size:13px;margin-top:12px;">The tool stays on the giver\'s record until the receiver accepts. Both get a reminder email after 24 hours.</p>'));
+    }
+    // Water lives in Contents (category "Water"); anyone can take it, Ahren adds stock here
+    function waterItems(){ return (currentData.contents || []).filter(c => c.category === 'Water'); }
+    function waterTile(){
+      const w = waterItems();
+      if (w.length === 0) return '';
+      const qty = w.reduce((n, c) => n + c.quantity, 0);
+      const low = w.some(c => c.isLow);
+      return tile('water', 'Water', qty, (w[0].unit ? w[0].unit + 's' : '') + ' on hand' + (low ? ', running low' : ''), low ? 'warn' : '', iconContents());
+    }
+    function renderAhrenWater(body){
+      document.getElementById('viewTitle').textContent = 'Water Stock';
+      const items = waterItems();
+      if (items.length === 0) { body.appendChild(fromHtml('<div class="empty">No water in the system yet.</div>')); return; }
+      if (!ADMIN) body.appendChild(fromHtml('<p class="adminNote" style="margin:0 0 14px;">Adding stock is off on this browser. Open the dashboard with your access key once to turn it on.</p>'));
+      items.forEach(c => {
+        const unit = c.unit || '';
+        const card = fromHtml('<div class="stockCard' + (c.isLow ? ' low' : '') + '">'
+          + '<h3>' + esc(c.item) + (c.isLow ? ' <span class="badge b-low">Reorder</span>' : '') + '</h3>'
+          + '<div class="onHand"><span class="n">' + c.quantity + '</span><small>' + esc(unit) + (c.quantity === 1 ? '' : 's') + ' on hand</small></div>'
+          + '<div class="sub">Reorder at ' + c.threshold + '. Crew take it from the Contents page.</div>'
+          + (ADMIN ? '<div class="stockAdd"><input type="number" inputmode="numeric" min="1" step="1" placeholder="' + esc(unit.charAt(0).toUpperCase() + unit.slice(1)) + 's to add"><button type="button">Add stock</button></div>' : '')
+          + '</div>');
+        body.appendChild(card);
+        if (!ADMIN) return;
+        const input = card.querySelector('input');
+        const btn = card.querySelector('button');
+        const add = async () => {
+          const n = parseInt(input.value, 10);
+          if (!(n > 0)) { toast('Enter how many to add', 'bad'); input.focus(); return; }
+          btn.disabled = true; btn.textContent = 'Adding…';
+          try {
+            const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_restock_contents', { method: 'POST', headers: SB_H, body: JSON.stringify({ p_token: ADMIN_KEY, p_editor: EDITOR, p_item_code: c.itemId, p_quantity: n, p_note: null }) });
+            const d = await res.json();
+            if (!d || !d.ok) throw new Error((d && d.message) || 'Could not add stock');
+            c.quantity = d.quantity;
+            c.isLow = c.threshold > 0 && c.quantity < c.threshold;
+            writeCache(currentData);
+            toast('Added ' + n + ' ' + unit + (n === 1 ? '' : 's') + '. ' + d.quantity + ' on hand.', 'ok');
+            const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenWater(b);
+          } catch(err) { toast(err.message, 'bad'); btn.disabled = false; btn.textContent = 'Add stock'; }
+        };
+        btn.addEventListener('click', add);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+      });
     }
     async function renderAhrenPhones(body){
       document.getElementById('viewTitle').textContent = 'Linked Phones';
