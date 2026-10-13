@@ -9,9 +9,9 @@ alter table public.contents add column if not exists open_to_all boolean not nul
 insert into public.contents (item_code, item_name, category, unit_of_measure, quantity, reorder_threshold, notes, open_to_all)
 select (select 'CT-' || lpad((coalesce(max(substring(item_code from '^CT-(\d+)$')::integer), 0) + 1)::text, 3, '0')
           from public.contents where item_code ~ '^CT-\d+$'),
-       'Bottled Water', 'Water', 'case', 0, 5,
+       'Water (case)', 'Water', 'case', 0, 5,
        'Any employee can take. Set the starting count with a Restock.', true
-where not exists (select 1 from public.contents where lower(item_name) = 'bottled water');
+where not exists (select 1 from public.contents where category = 'Water');
 
 create or replace function public.contents_adjust(p_person text, p_reason text, p_items jsonb, p_direction integer)
  returns jsonb
