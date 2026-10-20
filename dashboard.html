@@ -54,7 +54,7 @@
   .miniStat b{color:var(--paper); font-weight:700; font-size:16px; margin-right:4px;}
   .miniStat.hot b{color:var(--danger);}
   /* Search + filter bar */
-  /* Admin editing (Ahren, with ?key=) */
+  /* Admin editing (shop view, with ?key=) */
   .editBtn{appearance:none; background:transparent; border:1.5px solid var(--gray); color:var(--paper); border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap;}
   .editBtn:hover{border-color:var(--orange);}
   .addBtn{appearance:none; background:var(--orange); border:0; color:var(--ink); border-radius:8px; padding:9px 14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; margin-left:auto;}
@@ -207,12 +207,12 @@
     const ADMIN_KEY_STORE = 'haggerty_dashboard_admin_key';
     let ADMIN_KEY = (new URLSearchParams(window.location.search).get('key') || '').trim();
     try { if (ADMIN_KEY) localStorage.setItem(ADMIN_KEY_STORE, ADMIN_KEY); else ADMIN_KEY = localStorage.getItem(ADMIN_KEY_STORE) || ''; } catch(e) {}
-    const ADMIN = user === 'ahren' && !!ADMIN_KEY;
-    const EDITOR = user === 'ahren' ? 'Ahren S.' : (user.charAt(0).toUpperCase() + user.slice(1));
+    const ADMIN = user === 'shop' && !!ADMIN_KEY;
+    const EDITOR = user === 'shop' ? 'Shop admin' : (user.charAt(0).toUpperCase() + user.slice(1));
     let toastT;
     function toast(msg, kind){ const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show' + (kind ? ' ' + kind : ''); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
     // Access gate
-    if (user !== 'ahren' && user !== 'alice'){
+    if (user !== 'shop' && user !== 'alice'){
       document.getElementById('loading').style.display = 'none';
       document.getElementById('notAuth').style.display = 'block';
     } else {
@@ -300,8 +300,8 @@
       document.getElementById('updated').textContent = 'Last updated ' + generated.toLocaleTimeString();
       const body = document.getElementById('body');
       body.innerHTML = '';
-      if (user === 'ahren'){
-        renderAhren(body);
+      if (user === 'shop'){
+        renderShop(body);
       } else if (user === 'alice'){
         renderAlice(body);
       }
@@ -521,17 +521,17 @@
       body.appendChild(fromHtml('<div class="tableWrap' + aliceActivityScrollClass + '"><table><thead><tr><th>When</th><th>Unit</th><th>Item</th><th>Action</th><th>Movement</th><th>Held by</th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
       if (events.length > 12) body.appendChild(fromHtml('<div class="scrollHint">Scroll to see more &darr;</div>'));
     }
-    // ===== AHREN VIEWS =====
-    function renderAhren(body){
-      if (view === 'home') return renderAhrenHome(body);
-      if (view === 'checkouts') return renderAhrenCheckouts(body);
-      if (view === 'overdue') return renderAhrenOverdue(body);
-      if (view === 'activity') return renderAhrenActivity(body);
-      if (view === 'transfers') return renderAhrenTransfers(body);
-      if (view === 'phones') return renderAhrenPhones(body);
-      renderAhrenHome(body);
+    // ===== SHOP VIEWS =====
+    function renderShop(body){
+      if (view === 'home') return renderShopHome(body);
+      if (view === 'checkouts') return renderShopCheckouts(body);
+      if (view === 'overdue') return renderShopOverdue(body);
+      if (view === 'activity') return renderShopActivity(body);
+      if (view === 'transfers') return renderShopTransfers(body);
+      if (view === 'phones') return renderShopPhones(body);
+      renderShopHome(body);
     }
-    function renderAhrenHome(body){
+    function renderShopHome(body){
       document.getElementById('viewTitle').textContent = 'Shop Overview';
       const s = currentData.stats;
       const tiles = document.createElement('div');
@@ -544,7 +544,7 @@
         + (ADMIN ? tile('phones', 'Linked phones', '', 'who is linked, unlink lost phones', '', iconEquipment()) : '');
       body.appendChild(tiles);
     }
-    function renderAhrenTransfers(body){
+    function renderShopTransfers(body){
       document.getElementById('viewTitle').textContent = 'Handoffs Waiting on Acceptance';
       const items = currentData.pendingTransfers || [];
       if (items.length === 0){
@@ -566,7 +566,7 @@
       body.appendChild(fromHtml('<div class="tableWrap"><table><thead><tr><th>Item</th><th>From</th><th>To</th><th>Where</th><th>Note</th><th>Waiting</th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
       body.appendChild(fromHtml('<p style="color:var(--muted);font-size:13px;margin-top:12px;">The tool stays on the giver\'s record until the receiver accepts. Both get a reminder email after 24 hours.</p>'));
     }
-    async function renderAhrenPhones(body){
+    async function renderShopPhones(body){
       document.getElementById('viewTitle').textContent = 'Linked Phones';
       if (!ADMIN) { body.appendChild(fromHtml('<p class="adminNote">Editing is off on this browser. Open the dashboard with your access key once to turn it on.</p>')); return; }
       body.appendChild(fromHtml('<p class="adminNote" style="margin:0 0 14px;">Each person\'s phone links itself the first time they check out, return, or take something under their name. Unlink someone when they get a new phone or lose one; their next phone links on first use.</p>'));
@@ -588,11 +588,11 @@
           const d = await res.json();
           if (!d || !d.ok) throw new Error((d && d.message) || 'Could not unlink');
           toast(who + ' unlinked', 'ok');
-          const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenPhones(b);
+          const b = document.getElementById('body'); b.innerHTML = ''; renderShopPhones(b);
         } catch(err) { toast(err.message, 'bad'); btn.disabled = false; btn.textContent = 'Unlink'; }
       }));
     }
-    function renderAhrenCheckouts(body){
+    function renderShopCheckouts(body){
       document.getElementById('viewTitle').textContent = 'All Active Checkouts';
       const feed = currentData.activeCheckouts || [];
       if (ADMIN) { renderCheckoutsTable(body, feed, false); loadAdminCheckouts(body); return; }
@@ -737,7 +737,7 @@
         toast(data.changed ? 'Saved' : 'Nothing changed', 'ok');
         document.getElementById('editModal').classList.remove('show');
         try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
-        const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenCheckouts(b);
+        const b = document.getElementById('body'); b.innerHTML = ''; renderShopCheckouts(b);
       } catch(err) { toast(err.message, 'bad'); g.disabled = false; g.textContent = 'Save changes'; }
     });
     // ---- Add modal ----
@@ -769,10 +769,10 @@
         toast('Added ' + data.item + ' for ' + data.person, 'ok');
         document.getElementById('addModal').classList.remove('show');
         try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
-        const b = document.getElementById('body'); b.innerHTML = ''; renderAhrenCheckouts(b);
+        const b = document.getElementById('body'); b.innerHTML = ''; renderShopCheckouts(b);
       } catch(err) { toast(err.message, 'bad'); g.disabled = false; g.textContent = 'Add checkout'; }
     });
-    function renderAhrenOverdue(body){
+    function renderShopOverdue(body){
       document.getElementById('viewTitle').textContent = 'Overdue Items';
       const overdue = (currentData.activeCheckouts || []).filter(c => c.isOverdue);
       if (overdue.length === 0){
@@ -816,7 +816,7 @@
         body.appendChild(fromHtml('<div class="scrollHint">Scroll to see more &darr;</div>'));
       }
     }
-    function renderAhrenActivity(body){
+    function renderShopActivity(body){
       document.getElementById('viewTitle').textContent = 'Recent Shop Activity';
       // Combine checkouts + returns from last 24h
       const events = [];
