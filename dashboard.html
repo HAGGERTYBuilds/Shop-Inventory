@@ -167,6 +167,29 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="unitModal">
+    <div class="box">
+      <h3>Fix this unit</h3>
+      <p class="who" id="umWho"></p>
+      <label for="umType">Where it is now</label>
+      <select id="umType"><option value="Shop">Shop</option><option value="Van">Van</option><option value="Site">Site</option></select>
+      <div id="umWhereWrap">
+        <label for="umWhere" id="umWhereLabel">Job name or address</label>
+        <input id="umWhere" autocomplete="off">
+        <label for="umHeld">Who has it</label>
+        <input id="umHeld" list="umPeople" placeholder="Pick or type a name" autocomplete="off">
+        <datalist id="umPeople"></datalist>
+      </div>
+      <label for="umModel">Model</label>
+      <input id="umModel" autocomplete="off">
+      <label for="umReason">Why it's being changed by hand <span style="text-transform:none; font-weight:400;">(goes in the log)</span></label>
+      <input id="umReason" placeholder="e.g. tag didn't scan at the job" autocomplete="off">
+      <div class="buttons">
+        <button type="button" class="go" id="umGo">Save changes</button>
+        <button type="button" class="cancel" id="umCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
   <div class="modal" id="addModal">
     <div class="box">
       <h3>Add a checkout by hand</h3>
@@ -362,7 +385,7 @@
       const searchBar = document.createElement('div');
       searchBar.className = 'searchBar';
       searchBar.innerHTML = ''
-        + '<input id="eqSearch" type="text" placeholder="Search by ID or name..." autocomplete="off">'
+        + '<input id="eqSearch" type="text" placeholder="Search by ID, name or model..." autocomplete="off">'
         + '<div class="chipRow" id="eqLoc"></div>'
         + '<div class="chipRow" id="eqCat"></div>';
       body.appendChild(searchBar);
@@ -396,7 +419,7 @@
         let filtered = units;
         if (filterState.location !== 'all') filtered = filtered.filter(u => (u.locationType || 'Shop') === filterState.location);
         if (filterState.category !== 'all') filtered = filtered.filter(u => u.category === filterState.category);
-        if (filterState.search) filtered = filtered.filter(u => (u.itemId + ' ' + u.item).toLowerCase().includes(filterState.search));
+        if (filterState.search) filtered = filtered.filter(u => (u.itemId + ' ' + u.item + ' ' + (u.model || '')).toLowerCase().includes(filterState.search));
         if (filtered.length === 0){
           document.getElementById('eqTable').innerHTML = '<div class="empty">No units match your filters.</div>';
           return;
@@ -408,11 +431,12 @@
           else if (type === 'van') badge = '<span class="badge b-van">Van</span>';
           else if (type === 'site') badge = '<span class="badge b-site">Site</span>';
           else badge = '<span class="badge b-shop">' + esc(u.locationType) + '</span>';
-          return '<tr><td><b>' + esc(u.itemId) + '</b></td><td>' + esc(u.item || '-') + '</td><td>' + esc(u.category) + '</td><td>' + badge + ' ' + esc(u.location || '-') + '</td><td>' + esc(u.heldBy || '-') + '</td></tr>';
+          return '<tr><td><b>' + esc(u.itemId) + '</b></td><td>' + esc(u.item || '-') + '</td><td>' + esc(u.model || '-') + '</td><td>' + esc(u.category) + '</td><td>' + badge + ' ' + esc(u.location || '-') + '</td><td>' + esc(u.heldBy || '-') + '</td><td><button type="button" class="editBtn" data-id="' + esc(u.itemId) + '">Edit</button></td></tr>';
         }).join('');
         const eqScrollClass = filtered.length > 12 ? ' scroll' : '';
         const eqScrollHint = filtered.length > 12 ? '<div class="scrollHint">Scroll to see more &darr;</div>' : '';
-        document.getElementById('eqTable').innerHTML = '<div class="tableWrap' + eqScrollClass + '"><table><thead><tr><th>ID</th><th>Item</th><th>Category</th><th>Where</th><th>Held by</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + eqScrollHint;
+        document.getElementById('eqTable').innerHTML = '<div class="tableWrap' + eqScrollClass + '"><table><thead><tr><th>ID</th><th>Item</th><th>Model</th><th>Category</th><th>Where</th><th>Held by</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' + eqScrollHint;
+        document.querySelectorAll('#eqTable .editBtn').forEach(b => b.addEventListener('click', () => openUnitModal(units.find(x => x.itemId === b.dataset.id))));
       }
       refreshEquipment();
     }
@@ -515,7 +539,8 @@
       body.appendChild(stats);
       const rows = events.map(e => {
         const ts = new Date(e.timestamp);
-        return '<tr><td>' + esc(ts.toLocaleString()) + '</td><td><b>' + esc(e.itemId) + '</b></td><td>' + esc(e.item || '-') + '</td><td>' + esc(e.action) + '</td><td>' + esc(e.from || '-') + ' &rarr; ' + esc(e.to || '-') + '</td><td>' + esc(e.heldBy || '-') + '</td></tr>';
+        const manual = e.manual ? ' <span class="badge b-low" title="' + esc(e.notes || '') + '">Fixed by ' + esc(e.overrideBy || 'hand') + '</span>' : '';
+        return '<tr><td>' + esc(ts.toLocaleString()) + '</td><td><b>' + esc(e.itemId) + '</b></td><td>' + esc(e.item || '-') + '</td><td>' + esc(e.action) + manual + '</td><td>' + esc(e.from || '-') + ' &rarr; ' + esc(e.to || '-') + '</td><td>' + esc(e.heldBy || '-') + '</td></tr>';
       }).join('');
       const aliceActivityScrollClass = events.length > 12 ? ' scroll' : '';
       body.appendChild(fromHtml('<div class="tableWrap' + aliceActivityScrollClass + '"><table><thead><tr><th>When</th><th>Unit</th><th>Item</th><th>Action</th><th>Movement</th><th>Held by</th></tr></thead><tbody>' + rows + '</tbody></table></div>'));
@@ -871,6 +896,82 @@
         body.appendChild(fromHtml('<div class="tableWrap"><table><thead><tr><th>When</th><th>Person</th><th>Item</th><th>Notes</th><th>Verified</th><th>Photo</th></tr></thead><tbody>' + detailRows + '</tbody></table></div>'));
       }
     }
+    // ===== ALICE UNIT FIXES (tag didn't scan, wrong holder, model) =====
+    // Location/holder changes go through the alice-override webhook, which writes a new
+    // nfc_transactions row stamped as a manual override, so the unit's history stays intact.
+    const OVERRIDE_URL = 'https://haggertybuilds.app.n8n.cloud/webhook/alice-override';
+    const NFC_PEOPLE_URL = 'https://haggertybuilds.app.n8n.cloud/webhook/nfc-people';
+    let editingUnit = null;
+    let unitPeopleLoaded = false;
+    async function loadUnitPeople(){
+      if (unitPeopleLoaded) return;
+      try {
+        const res = await fetch(NFC_PEOPLE_URL, { cache: 'no-store' });
+        const data = await res.json();
+        const names = [...new Set((data && data.people || []).map(p => (p && p.name || '').trim()).filter(Boolean))].sort();
+        document.getElementById('umPeople').innerHTML = names.map(n => '<option value="' + esc(n) + '">').join('');
+        unitPeopleLoaded = true;
+      } catch(e) {}
+    }
+    function syncUnitType(){
+      const t = document.getElementById('umType').value;
+      document.getElementById('umWhereWrap').style.display = t === 'Shop' ? 'none' : 'block';
+      document.getElementById('umWhereLabel').textContent = t === 'Van' ? 'Which van' : 'Job name or address';
+    }
+    function openUnitModal(u){
+      if (!u) return;
+      editingUnit = u;
+      const type = ['Shop', 'Van', 'Site'].includes(u.locationType) ? u.locationType : 'Shop';
+      document.getElementById('umWho').textContent = u.itemId + ' · ' + (u.item || '') + (u.heldBy ? ' · now with ' + u.heldBy : '');
+      document.getElementById('umType').value = type;
+      document.getElementById('umWhere').value = type === 'Shop' || u.location === type ? '' : (u.location || '');
+      document.getElementById('umHeld').value = u.heldBy || '';
+      document.getElementById('umModel').value = u.model || '';
+      document.getElementById('umReason').value = '';
+      syncUnitType();
+      const g = document.getElementById('umGo'); g.disabled = false; g.textContent = 'Save changes';
+      document.getElementById('unitModal').classList.add('show');
+      loadUnitPeople();
+    }
+    document.getElementById('umType').addEventListener('change', syncUnitType);
+    document.getElementById('umCancel').addEventListener('click', () => document.getElementById('unitModal').classList.remove('show'));
+    document.getElementById('unitModal').addEventListener('click', (e) => { if (e.target.id === 'unitModal') document.getElementById('unitModal').classList.remove('show'); });
+    async function postOverride(payload){
+      const res = await fetch(OVERRIDE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ by: EDITOR }, payload)) });
+      const data = await res.json().catch(() => null);
+      if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not save');
+      return data;
+    }
+    document.getElementById('umGo').addEventListener('click', async () => {
+      const u = editingUnit; if (!u) return;
+      const type = document.getElementById('umType').value;
+      const where = document.getElementById('umWhere').value.trim();
+      const held = type === 'Shop' ? '' : document.getElementById('umHeld').value.trim();
+      const model = document.getElementById('umModel').value.trim();
+      const reason = document.getElementById('umReason').value.trim();
+      const oldType = ['Shop', 'Van', 'Site'].includes(u.locationType) ? u.locationType : 'Shop';
+      const oldWhere = oldType === 'Shop' || u.location === oldType ? '' : (u.location || '');
+      const moved = type !== oldType || (type !== 'Shop' && (where !== oldWhere || held !== (u.heldBy || '')));
+      const modelChanged = model !== (u.model || '');
+      if (!moved && !modelChanged){ toast('Nothing changed'); return; }
+      if (moved && type === 'Site' && !where){ toast('Enter the job name or address', 'bad'); return; }
+      if (moved && !reason){ toast('Add a reason so the log makes sense', 'bad'); return; }
+      const g = document.getElementById('umGo'); g.disabled = true; g.textContent = 'Saving…';
+      try {
+        if (moved){
+          await postOverride({ mode: 'relocate', itemCode: u.itemId, locationType: type, toLocation: type === 'Shop' ? '' : where, heldBy: held, notes: reason });
+          u.locationType = type; u.location = type === 'Shop' ? 'Shop' : (where || type); u.heldBy = held;
+        }
+        if (modelChanged){
+          await postOverride({ mode: 'model', itemCode: u.itemId, model: model, notes: reason });
+          u.model = model;
+        }
+        toast('Saved ' + u.itemId, 'ok');
+        document.getElementById('unitModal').classList.remove('show');
+        try { sessionStorage.removeItem(CACHE_KEY); } catch(e) {}
+        loadDashboardFresh(false);
+      } catch(err) { toast(err.message, 'bad'); g.disabled = false; g.textContent = 'Save changes'; }
+    });
     // ===== HELPERS =====
     function tile(viewName, label, num, sub, style, iconSvg){
       const href = 'dashboard.html?u=' + user + '&view=' + viewName;
