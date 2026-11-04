@@ -362,7 +362,9 @@
     }
     function renderEquipmentPage(body){
       document.getElementById('viewTitle').textContent = 'Mitigation Equipment';
-      const units = currentData.mitUnits || [];
+      // Fans are listed under the Air Movers tab. Display only: the units, tags and history keep their own type.
+      const TAB_FOR = { 'Fans': 'Air Movers' };
+      const units = (currentData.mitUnits || []).map(u => Object.assign({}, u, { category: TAB_FOR[u.category] || u.category }));
       // Stats bar
       const s = currentData.stats;
       const stats = document.createElement('div');
