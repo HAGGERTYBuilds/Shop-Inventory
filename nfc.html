@@ -123,6 +123,17 @@
   .cartItem .cInfo{flex:1; min-width:0;}
   .cartItem .cName{font-size:15px; font-weight:600; color:var(--paper); overflow:hidden; text-overflow:ellipsis;}
   .cartItem .cId{color:var(--muted); font-size:11px; margin-top:2px;}
+  /* Manual add: the fallback when a tag will not read */
+  .manualAdd{background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px;}
+  .manualAdd .mTitle{font-size:14px; font-weight:600; color:var(--paper); margin-bottom:10px;}
+  .manualAdd .mRow{display:flex; gap:8px;}
+  .manualAdd input{padding:13px 14px; font-size:16px;}
+  .manualAdd .mAddBtn{appearance:none; border:0; border-radius:12px; background:var(--orange); color:var(--ink); font-weight:700; font-size:15px; padding:0 18px; cursor:pointer; flex-shrink:0;}
+  .manualAdd .mResults{margin-top:8px;}
+  .manualAdd .mHit{display:flex; justify-content:space-between; gap:10px; padding:11px 4px; border-top:1px solid var(--line); cursor:pointer; font-size:15px;}
+  .manualAdd .mHit .mId{color:var(--orange); font-weight:700; flex-shrink:0;}
+  .manualAdd .mHit .mName{color:var(--paper); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right;}
+  .manualAdd .mNone{color:var(--muted); font-size:13px; padding:8px 4px 0;}
   .cartItem .cAction{color:var(--paper); font-size:13px; margin-top:6px;}
   .cartItem .cAction .actionMissing{color:var(--orange); font-weight:600;}
   .cartItem .chevron{color:var(--muted); flex-shrink:0;}
@@ -298,6 +309,16 @@
       <div style="background:rgba(63,178,127,.10); border:1px solid rgba(63,178,127,.4); border-radius:12px; padding:16px; text-align:center; margin-bottom:16px;" id="cartHint">
         <div style="font-size:15px; color:var(--paper); font-weight:600;">Tap the next tag now</div>
         <div style="font-size:13px; color:var(--muted); margin-top:4px;">Tap any item below to edit it</div>
+      </div>
+
+      <!-- Fallback for tags that will not read (common on older iPhones and on metal gear) -->
+      <div class="manualAdd" id="manualAdd">
+        <div class="mTitle">Tag won't scan? Add it by ID or name</div>
+        <div class="mRow">
+          <input id="manualInput" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. 034 or generator" aria-label="Unit ID or name">
+          <button type="button" class="mAddBtn" id="manualAddBtn">Add</button>
+        </div>
+        <div class="mResults" id="manualResults"></div>
       </div>
 
       <button class="submit" id="cartCommit" style="margin-bottom:10px;" disabled>Commit all (0 items)</button>
@@ -1184,6 +1205,85 @@
       scheduleCartStatusRefresh();
     }
 
+    // ===== MANUAL ADD (fallback when a tag will not read) =====
+    // Matches the typed text against the cached catalog by ID or name.
+    // "34", "034", "eq34" and "EQ-034" all find EQ-034.
+    function manualMatches(q){
+      const catalog = readCache(CACHE_KEY_CATALOG) || {};
+      const raw = String(q || '').trim().toUpperCase();
+      if (!raw) return [];
+      const compact = raw.replace(/[^A-Z0-9]/g, '');
+      const digits = compact.replace(/^[A-Z]+/, '');
+      const words = raw.toLowerCase().split(/\s+/).filter(Boolean);
+      const hits = [];
+      Object.keys(catalog).forEach(id => {
+        const c = catalog[id] || {};
+        const idCompact = id.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const idDigits = idCompact.replace(/^[A-Z]+/, '');
+        const name = String(c.item || '').toLowerCase();
+        let score = 0;
+        if (idCompact === compact) score = 100;
+        else if (/^\d+$/.test(digits) && digits && Number(idDigits) === Number(digits) && /^[A-Z]*\d+$/.test(compact)) score = 90;
+        else if (compact.length >= 2 && idCompact.indexOf(compact) !== -1) score = 60;
+        else if (words.length && words.every(w => name.indexOf(w) !== -1)) score = 40;
+        if (score) hits.push({ id, item: c.item || '', score });
+      });
+      hits.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+      return hits.slice(0, 8);
+    }
+
+    function renderManualResults(){
+      const box = document.getElementById('manualResults');
+      const q = document.getElementById('manualInput').value;
+      box.innerHTML = '';
+      if (!q.trim()) return;
+      const hits = manualMatches(q);
+      if (!hits.length){
+        const none = document.createElement('div');
+        none.className = 'mNone';
+        none.textContent = readCache(CACHE_KEY_CATALOG)
+          ? 'No unit matches. Check the ID on the tag label.'
+          : 'Loading the unit list\u2026';
+        box.appendChild(none);
+        return;
+      }
+      hits.forEach(h => {
+        const row = document.createElement('div');
+        row.className = 'mHit';
+        const idEl = document.createElement('span'); idEl.className = 'mId'; idEl.textContent = h.id;
+        const nmEl = document.createElement('span'); nmEl.className = 'mName'; nmEl.textContent = h.item;
+        row.appendChild(idEl); row.appendChild(nmEl);
+        row.addEventListener('click', () => manualAdd(h.id));
+        box.appendChild(row);
+      });
+    }
+
+    function manualAdd(id){
+      if (!id) return;
+      addToCart(id);
+      const input = document.getElementById('manualInput');
+      input.value = '';
+      document.getElementById('manualResults').innerHTML = '';
+      input.blur();
+    }
+
+    document.getElementById('manualInput').addEventListener('input', renderManualResults);
+    document.getElementById('manualInput').addEventListener('focus', () => {
+      if (!readCache(CACHE_KEY_CATALOG)) fetchCatalog().then(renderManualResults);
+    });
+    function manualSubmit(){
+      const q = document.getElementById('manualInput').value;
+      const hits = manualMatches(q);
+      // Add straight away only when the match is clear; otherwise let them pick.
+      if (hits.length && (hits.length === 1 || hits[0].score >= 90)) manualAdd(hits[0].id);
+      else if (!hits.length && readCache(CACHE_KEY_CATALOG)) toast('No unit matches ' + q.trim());
+      else renderManualResults();
+    }
+    document.getElementById('manualAddBtn').addEventListener('click', manualSubmit);
+    document.getElementById('manualInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ e.preventDefault(); manualSubmit(); }
+    });
+
     // ===== BACKGROUND STATUS FOR STAGED ITEMS =====
     // Debounced so tapping six tags in a row costs one call, not six.
     let cartStatusTimer = null;
@@ -1453,6 +1553,10 @@
 
     // ===== HOME SCREEN TIP LOGIC =====
     const TIP_DISMISSED_KEY = 'haggerty_nfc_tip_dismissed';
+    const TIP_DISMISSED_KEY_IOS = 'haggerty_nfc_tip_ios_dismissed';
+    function dismissTip(){
+      localStorage.setItem(detectPlatform() === 'ios' ? TIP_DISMISSED_KEY_IOS : TIP_DISMISSED_KEY, '1');
+    }
 
     function isStandalone(){
       // iOS Safari uses navigator.standalone; other browsers use display-mode media query
@@ -1469,6 +1573,18 @@
     }
 
     function maybeShowTipBanner(){
+      if (detectPlatform() === 'ios'){
+        // iPhone gets scanning tips instead of the Home Screen pitch. New key so crews
+        // who dismissed the old tip still see this once.
+        if (localStorage.getItem(TIP_DISMISSED_KEY_IOS)) return;
+        document.querySelector('#tipBanner .tipTitle').textContent = 'Scanning on iPhone';
+        document.getElementById('tipText').textContent = isStandalone()
+          ? 'Tag taps open in Safari, not in this Home Screen app, so scan from Safari. Tap below for tips that help tags read.'
+          : 'Hold the top edge of the phone to the tag. Tap below for tips that help tags read.';
+        document.getElementById('tipShow').textContent = 'Show tips';
+        document.getElementById('tipBanner').style.display = 'block';
+        return;
+      }
       // Don't show if running as PWA
       if (isStandalone()) return;
       // Don't show if user dismissed
@@ -1478,7 +1594,7 @@
     }
 
     document.getElementById('tipClose').addEventListener('click', () => {
-      localStorage.setItem(TIP_DISMISSED_KEY, '1');
+      dismissTip();
       document.getElementById('tipBanner').style.display = 'none';
     });
 
@@ -1493,12 +1609,14 @@
       body.innerHTML = '';
 
       if (platform === 'ios'){
-        title.textContent = 'Add to iPhone Home Screen';
+        // iPhone always opens tag links in Safari, and a Home Screen app keeps its own
+        // separate storage, so a cart built there never sees the taps. Coach the tap instead.
+        title.textContent = 'Scanning tags on iPhone';
         body.innerHTML = ''
-          + '<div class="tipStep"><div class="tipStepNum">1</div><div class="tipStepText">Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow pointing up).</div></div>'
-          + '<div class="tipStep"><div class="tipStepNum">2</div><div class="tipStepText">Scroll down in the menu and tap <b>Add to Home Screen</b>.</div></div>'
-          + '<div class="tipStep"><div class="tipStepNum">3</div><div class="tipStepText">Name it (like "Shop NFC") and tap <b>Add</b>.</div></div>'
-          + '<div class="tipStep"><div class="tipStepNum">4</div><div class="tipStepText">Before scanning tags, open the app from your home screen icon. Then tap tags freely.</div></div>';
+          + '<div class="tipStep"><div class="tipStepNum">1</div><div class="tipStepText">Unlock the phone with the screen on. Close the camera and Wallet first, since iPhone will not read tags while they are open.</div></div>'
+          + '<div class="tipStep"><div class="tipStepNum">2</div><div class="tipStepText">The reader is at the <b>top edge</b>, next to the camera. Touch that part of the back of the phone flat to the tag and hold still for a full second.</div></div>'
+          + '<div class="tipStep"><div class="tipStepNum">3</div><div class="tipStepText">Tap the banner that drops down from the top of the screen. The item lands in your cart in Safari.</div></div>'
+          + '<div class="tipStep"><div class="tipStepNum">4</div><div class="tipStepText">Still nothing? Take off any MagSafe wallet, ring or metal plate on the case. Or type the ID from the tag label into <b>Tag won\'t scan?</b> below the cart.</div></div>';
       } else if (platform === 'android'){
         title.textContent = 'Add to Android Home Screen';
         body.innerHTML = ''
@@ -1518,7 +1636,7 @@
       document.getElementById('tipOverlay').classList.remove('show');
     });
     document.getElementById('tipDone').addEventListener('click', () => {
-      localStorage.setItem(TIP_DISMISSED_KEY, '1');
+      dismissTip();
       document.getElementById('tipOverlay').classList.remove('show');
       document.getElementById('tipBanner').style.display = 'none';
     });
