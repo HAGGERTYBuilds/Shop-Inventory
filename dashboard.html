@@ -939,7 +939,9 @@
     document.getElementById('umCancel').addEventListener('click', () => document.getElementById('unitModal').classList.remove('show'));
     document.getElementById('unitModal').addEventListener('click', (e) => { if (e.target.id === 'unitModal') document.getElementById('unitModal').classList.remove('show'); });
     async function postOverride(payload){
-      const res = await fetch(OVERRIDE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ by: EDITOR }, payload)) });
+      // The key comes from this person's own dashboard link (&key=...), remembered on this device.
+      if (!ADMIN_KEY) throw new Error('This device needs your dashboard link with the key. Open it once from your text or email, then try again.');
+      const res = await fetch(OVERRIDE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ by: EDITOR, key: ADMIN_KEY }, payload)) });
       const data = await res.json().catch(() => null);
       if (!data || data.ok !== true) throw new Error((data && data.message) || 'Could not save');
       return data;
