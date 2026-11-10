@@ -825,6 +825,7 @@
       const notes = document.getElementById('returnNotes').value.trim();
       const qty = returnQtyValue();
       if(!notes || !returnPhotoFile || !returnVerification || qty === 0){ updateConfirmEnabled(); return; }
+      if(!(await HagDevice.ensure(document.getElementById('name').value)).ok) return;
       window.__returning = true;
       btn.dataset.busy = '1';
       btn.disabled = true;
@@ -883,7 +884,6 @@
           document.querySelectorAll('.ret').forEach(b => { b.disabled = true; });
           completeReturn(ctx);
         }
-        HagDevice.claim(document.getElementById('name').value).then(r => { if (r && r.ok === false && r.message) toast(r.message); });
         btn.disabled = false;
         btn.textContent = 'Confirm Return';
       } catch(e){
@@ -935,6 +935,7 @@
       const toPerson = document.getElementById('xferPerson').value;
       const note = document.getElementById('xferNote').value.trim();
       if (!toPerson) return;
+      if (!(await HagDevice.ensure(document.getElementById('name').value)).ok) return;
       const btn = document.getElementById('xferGo');
       btn.disabled = true; btn.textContent = 'Sending…';
       try {
@@ -944,7 +945,6 @@
         const data = await res.json().catch(() => null);
         if (!data || data.ok !== true) { toast((data && data.message) || 'Could not send, try again'); btn.disabled = false; btn.textContent = 'Send handoff'; return; }
         closeTransferModal();
-        HagDevice.claim(document.getElementById('name').value);
         const sentN = Array.isArray(data.sent) ? data.sent.length : items.length;
         const failedN = Array.isArray(data.failed) ? data.failed.length : 0;
         toast('Sent ' + (sentN > 1 ? sentN + ' items' : (items[0].item)) + ' to ' + toPerson.replace(/\.$/, '') + (failedN ? ' (' + failedN + ' could not be sent)' : '') + '. Waiting on them to accept.', true);
