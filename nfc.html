@@ -464,11 +464,11 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const NFC_STATUS_URL   = "https://haggertybuilds.app.n8n.cloud/webhook/nfc-status";
-    const NFC_TX_URL       = "https://haggertybuilds.app.n8n.cloud/webhook/nfc-transaction";
-    const NFC_PEOPLE_URL   = "https://haggertybuilds.app.n8n.cloud/webhook/nfc-people";
-    const NFC_CATALOG_URL  = "https://haggertybuilds.app.n8n.cloud/webhook/nfc-catalog";
-    const NFC_BULK_URL     = "https://haggertybuilds.app.n8n.cloud/webhook/nfc-bulk-status";
+    // All NFC data lives in Supabase (the SB workflows). The old Excel endpoints are retired.
+    const NFC_TX_URL       = "https://haggertybuilds.app.n8n.cloud/webhook/sb-nfc-transaction";
+    const NFC_PEOPLE_URL   = "https://haggertybuilds.app.n8n.cloud/webhook/sb-nfc-people";
+    const NFC_CATALOG_URL  = "https://haggertybuilds.app.n8n.cloud/webhook/sb-nfc-catalog";
+    const NFC_BULK_URL     = "https://haggertybuilds.app.n8n.cloud/webhook/sb-nfc-bulk-status";
 
     let currentState = null; // { itemId, item, category, currentHolder, currentLocation, currentLocationType, people }
     let t;
@@ -577,9 +577,24 @@
       }
       renderShellNow();
       try{
-        const res = await fetch(NFC_STATUS_URL + '?id=' + encodeURIComponent(id), { cache:'no-store' });
+        // One unit's status = the bulk status for that ID, with name and category from the catalog.
+        const [res, catalog] = await Promise.all([
+          fetch(NFC_BULK_URL + '?ids=' + encodeURIComponent(id), { cache:'no-store' }),
+          readCache(CACHE_KEY_CATALOG) ? Promise.resolve(readCache(CACHE_KEY_CATALOG)) : fetchCatalog()
+        ]);
         const data = await res.json();
-        currentState = data;
+        const st = (data && data.items && data.items[id]) || null;
+        const cat = (catalog && catalog[id]) || null;
+        if (!st || (st.firstScan && catalog && !cat)) {
+          currentState = { ok: false };   // not a known unit
+        } else {
+          currentState = Object.assign({}, st, {
+            ok: true,
+            itemId: id,
+            item: st.item || (cat && cat.item) || '',
+            category: st.category || (cat && cat.category) || ''
+          });
+        }
         renderStatus();
       } catch(e){
         const btn = document.getElementById('submit');
