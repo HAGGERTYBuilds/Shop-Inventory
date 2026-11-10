@@ -1054,6 +1054,7 @@
       if(pendingItems().length === 0){ toast("Pick a tool"); return; }
       if(!dest){ toast("Enter the job # or job name"); document.getElementById('dest').focus(); return; }
       if(!dueDateStr){ toast("Pick a return date"); document.getElementById('dueDate').focus(); return; }
+      if(!(await HagDevice.ensure(name)).ok) return;
       if(!presence){ toast('Verify you are at the shop first'); document.getElementById('verifyStatus').scrollIntoView({ block: 'center', behavior: 'smooth' }); startGeoCheck(); return; }
       // If any item is mitigation equipment AND person is not approved, collect one justification for the batch
       if (currentNeedsApproval()) {
@@ -1113,8 +1114,6 @@
         else { u.status = 'failed'; u.message = (data && data.message) ? data.message : 'No signal'; }
       }
       submitting = false; btn.disabled = false; btn.textContent = 'Check Out Tool';
-      // First successful action under this name links the phone to it
-      if (b.units.some(u => u.status === 'checked_out' || u.status === 'pending')) HagDevice.claim(b.name).then(r => { if (r && r.ok === false && r.message) toast(r.message); });
       showBatchResult();
     }
     function unitLabel(u){ return (u.quantity || 1) > 1 ? (u.quantity + ' ' + u.item) : u.item; }

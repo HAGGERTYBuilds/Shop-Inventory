@@ -1,5 +1,6 @@
 /* Haggerty Shop Tools: one phone, one person.
-   The phone claims a name the first time an action succeeds. After that every page
+   The phone claims a name the first time the person checks out, returns or hands off (HagDevice.ensure),
+   or on the first success on pages that don't gate yet (contents, surplus, trailers). After that every page
    shows "as <name>" with no dropdown, and every request carries the phone's token.
    Pages call:  HagDevice.init(opts)  HagDevice.token()  HagDevice.person()  HagDevice.claim(name)
 */
@@ -73,6 +74,29 @@
     return data || { ok: false };
   }
 
+  // Called by the page right before it submits a checkout, return or handoff.
+  // A phone that is not linked yet gets linked to the chosen name first (after the person confirms),
+  // so the server can check every request against the phone's token.
+  // Returns { ok: true } to go ahead, or { ok: false } after telling the person why not.
+  async function ensure(name) {
+    if (!name) return { ok: false };
+    const who = person();
+    if (who) {
+      if (who.toLowerCase() === String(name).toLowerCase()) return { ok: true };
+      alert('This phone is linked to ' + who + '. You can only act as yourself. Ask Liam if this is wrong.');
+      return { ok: false };
+    }
+    const msg = 'Link this phone to ' + name + '?\n\n'
+      + 'Everything checked out or returned on this phone will be under ' + name + ' from now on, '
+      + 'and ' + name + ' gets an email saying so. Only tap OK if you are ' + name + '.';
+    if (!confirm(msg)) return { ok: false };
+    const r = await claim(name);
+    if (r && r.ok) return { ok: true };
+    if (!HagDevice.required && (!r || r.error === 'network')) return { ok: true };  // not enforced yet: don't block on a bad signal
+    alert((r && r.message) || 'Could not link this phone. Check your signal and try again.');
+    return { ok: false };
+  }
+
   // On load: if this phone is linked, lock the dropdown to that person. If the link was revoked, clear it.
   async function init(opts) {
     opts = opts || {};
@@ -99,5 +123,5 @@
     } catch (e) { /* offline: keep whatever we had */ }
   }
 
-  window.HagDevice = { init, token, person, claim, required: false, _opts: {}, _selectId: 'name' };
+  window.HagDevice = { init, token, person, claim, ensure, required: false, _opts: {}, _selectId: 'name' };
 })();
