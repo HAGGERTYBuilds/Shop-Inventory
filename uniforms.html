@@ -30,6 +30,11 @@
   .htitle{font-family:"Arial Narrow",Arial,sans-serif; font-weight:800; letter-spacing:.14em; text-transform:uppercase; font-size:17px;}
   .rule{height:6px; margin:0 0 22px; border-radius:4px; background:repeating-linear-gradient(135deg,var(--orange) 0 14px,#2b2b2b 14px 26px);}
 
+  .brandToggle{display:flex; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:4px; margin-bottom:22px;}
+  .brandToggle button{flex:1; appearance:none; border:0; background:transparent; color:var(--muted); padding:10px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; border-radius:9px; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .brandToggle button img{height:22px; width:auto; opacity:.55;}
+  .brandToggle button.active{background:var(--orange); color:var(--ink);}
+  .brandToggle button.active img{opacity:1;}
   .field{margin-bottom:20px;}
   label,.lbl{display:block; font-size:13px; font-weight:600; letter-spacing:.02em; color:var(--muted); text-transform:uppercase; margin-bottom:8px;}
   select,input{width:100%; appearance:none; background:var(--field); color:var(--paper);
@@ -114,6 +119,10 @@
   <div class="rule"></div>
 
   <div id="mainForm">
+    <div class="brandToggle" id="brandToggle" role="tablist" aria-label="Which uniforms">
+      <button type="button" data-brand="Haggerty" role="tab"><img alt="" data-logo="h">Haggerty</button>
+      <button type="button" data-brand="RHINO" role="tab"><img alt="" data-logo="r">RHINO</button>
+    </div>
     <div class="errBox" id="errBox"></div>
 
     <div class="field">
@@ -178,9 +187,22 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const SHIRT = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 3l-5 3 2 4 2-1v12h10V9l2 1 2-4-5-3c0 2-1.8 3-4 3S8 5 8 3z"/></svg>';
 
-  let catalog = [];
-  let cart = [];            // {item_code, item_name, size, quantity}
+  let catalog = [], catalogLoaded = false;
+  let cart = [];            // {item_code, item_name, brand, size, quantity}
   let pick = null;          // {item, size, qty}
+  const BRAND_KEY = 'haggerty_uniform_brand';
+  const urlBrand = (new URLSearchParams(location.search).get('brand') || '').toLowerCase();
+  let brand = urlBrand === 'rhino' ? 'RHINO' : urlBrand === 'haggerty' ? 'Haggerty' : '';
+  if (!brand){ try{ brand = localStorage.getItem(BRAND_KEY) || ''; }catch(e){} }
+  if (brand !== 'RHINO') brand = 'Haggerty';
+  function setBrand(b){
+    brand = b; try{ localStorage.setItem(BRAND_KEY, b); }catch(e){}
+    document.querySelectorAll('#brandToggle button').forEach(x => { const on = x.dataset.brand === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', on); });
+    renderCatalog();
+  }
+  document.querySelector('[data-logo="h"]').src = document.querySelector('.mark').src;
+  document.querySelector('[data-logo="r"]').src = document.querySelector('.mark-rhino').src;
+  document.querySelectorAll('#brandToggle button').forEach(x => x.addEventListener('click', () => setBrand(x.dataset.brand)));
 
   async function rpc(fn, body){
     const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, { method:'POST', headers:H, body: JSON.stringify(body || {}) });
@@ -202,6 +224,7 @@
   async function loadCatalog(){
     try{
       catalog = await rpc('uniform_catalog');
+      catalogLoaded = true;
       renderCatalog();
     }catch(e){ $('catalog').innerHTML = '<div class="empty">Could not load uniforms. Check your signal and reload.</div>'; }
   }
@@ -210,9 +233,11 @@
   function available(item, size){ const s = item.sizes.find(x => x.size === size); return s ? s.quantity - inCart(item.item_code, size) : 0; }
 
   function renderCatalog(){
-    if (!catalog.length){ $('catalog').innerHTML = '<div class="empty">No uniform items set up yet.</div>'; return; }
+    if (!catalogLoaded) return;
+    const list = catalog.filter(i => (i.brand || 'Haggerty') === brand);
+    if (!list.length){ $('catalog').innerHTML = '<div class="empty">No ' + esc(brand) + ' uniforms set up yet.</div>'; return; }
     const groups = {};
-    catalog.forEach(i => (groups[i.category] = groups[i.category] || []).push(i));
+    list.forEach(i => (groups[i.category] = groups[i.category] || []).push(i));
     let html = '';
     Object.keys(groups).forEach(cat => {
       html += '<div class="cat">' + esc(cat) + '</div><div class="grid">';
@@ -264,13 +289,13 @@
     if (!pick || !pick.size) return;
     const ex = cart.find(c => c.item_code === pick.item.item_code && c.size === pick.size);
     if (ex) ex.quantity += pick.qty;
-    else cart.push({ item_code: pick.item.item_code, item_name: pick.item.item_name, size: pick.size, quantity: pick.qty });
+    else cart.push({ item_code: pick.item.item_code, item_name: pick.item.item_name, brand: pick.item.brand || 'Haggerty', size: pick.size, quantity: pick.qty });
     closeSheet(); renderCart(); renderCatalog();
   }
 
   function renderCart(){
     $('cart').innerHTML = cart.length ? cart.map((c, i) =>
-      '<div class="line"><div class="info"><div class="name">' + esc(c.item_name) + '</div><div class="meta">Size ' + esc(c.size) + ' · Qty ' + c.quantity + '</div></div>'
+      '<div class="line"><div class="info"><div class="name">' + esc(c.item_name) + '</div><div class="meta">' + esc(c.brand) + ' · Size ' + esc(c.size) + ' · Qty ' + c.quantity + '</div></div>'
       + '<button type="button" class="x" data-i="' + i + '" aria-label="Remove">×</button></div>').join('')
       : '<div class="empty">Nothing picked yet</div>';
     $('cart').querySelectorAll('.x').forEach(b => b.addEventListener('click', () => { cart.splice(+b.dataset.i, 1); renderCart(); renderCatalog(); }));
@@ -309,6 +334,7 @@
   $('againBtn').addEventListener('click', () => { $('done').classList.remove('show'); $('mainForm').style.display = ''; window.scrollTo(0,0); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
+  setBrand(brand);
   loadPeople().then(() => HagDevice.init({ selectId: 'name', verb: 'Taking uniforms' }));
   loadCatalog();
 })();
