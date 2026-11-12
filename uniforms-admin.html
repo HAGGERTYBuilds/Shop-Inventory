@@ -274,7 +274,7 @@
   <div class="dbody" id="cartBody"></div>
   <div class="dfoot">
     <div class="total"><span id="cartUnits">0 units</span><span id="cartTotal"></span></div>
-    <div class="f"><label for="vendorEmail">Send to (supplier email)</label><input id="vendorEmail" type="email" placeholder="orders@supplier.com"></div>
+    <div class="f"><label for="vendorEmail">Send to (supplier email)</label><input id="vendorEmail" type="email" placeholder="art@cvprint.net"></div>
     <div class="f"><label for="orderNotes">Notes for the supplier</label><input id="orderNotes" placeholder="Ship to the shop, need by Friday…"></div>
     <div class="err" id="cartErr"></div>
     <button class="btn" id="placeOrder" type="button" style="width:100%">Place order &amp; write email</button>
@@ -362,6 +362,8 @@
   const SUPABASE_ANON_KEY = "sb_publishable_w9xkQQE07152NL8faFVTwQ_LSJ9Hf_d";
   const H = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
   const DOOR_URL = new URL('uniforms.html', location.href).href.split('?')[0];
+  /* Creative Vision Printing (Heather McCoy sends the proofs from here). */
+  const VENDOR_EMAIL = 'art@cvprint.net';
   const K = { key:'haggerty_uniform_admin_key', name:'haggerty_uniform_admin_name', cart:'haggerty_uniform_cart_v1', email:'haggerty_uniform_vendor_email' };
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -582,7 +584,7 @@
     $('cartTotal').textContent = total ? 'Est. ' + money(total) + (priced ? '' : ' + unpriced') : '';
     $('placeOrder').disabled = !cart.length;
   }
-  function openCart(){ $('drawer').classList.add('show'); $('scrim').classList.add('show'); err('cartErr',''); if (!$('vendorEmail').value) $('vendorEmail').value = ls.get(K.email); }
+  function openCart(){ $('drawer').classList.add('show'); $('scrim').classList.add('show'); err('cartErr',''); if (!$('vendorEmail').value) $('vendorEmail').value = ls.get(K.email) || VENDOR_EMAIL; }
   function closeCart(){ $('drawer').classList.remove('show'); $('scrim').classList.remove('show'); }
   $('cartBtn').addEventListener('click', openCart); $('closeCart').addEventListener('click', closeCart); $('scrim').addEventListener('click', closeCart);
   $('placeOrder').addEventListener('click', async () => {
@@ -623,7 +625,7 @@
     if (total) body += 'Estimated total: ' + money(total) + (priced ? '' : ' (some items unpriced)') + '\n';
     if (o.notes) body += '\nNotes: ' + o.notes + '\n';
     body += '\nPlease confirm the order and expected ship date.\n\nThank you,\n' + (o.placed_by || ME) + '\n' + who;
-    return { to: o.vendor_email || '', subject: 'Uniform order ' + o.order_code + ' · ' + who, body };
+    return { to: o.vendor_email || VENDOR_EMAIL, subject: 'Uniform order ' + o.order_code + ' · ' + who, body };
   }
   function showEmail(o){
     const e = buildEmail(o);
