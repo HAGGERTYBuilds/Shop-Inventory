@@ -401,13 +401,11 @@
   function fmtDate(s){ if (!s) return ''; const d = new Date(s); return d.toLocaleDateString(undefined,{month:'short', day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'}); }
 
   /* ---------- gate ---------- */
+  // Only these people can sign in to the uniform manager.
+  const MANAGERS = ['Liam McGinn', 'Lorra Blankenship', 'Bakul Patel'];
   async function loadPeople(){
-    try{
-      const res = await fetch(SUPABASE_URL + '/rest/v1/people?select=name&active=eq.true&order=name', { headers:H });
-      const rows = await res.json();
-      $('gName').innerHTML = '<option value="">Choose your name</option>' + rows.map(r => '<option>' + esc(r.name) + '</option>').join('');
-      if (ls.get(K.name)) $('gName').value = ls.get(K.name);
-    }catch(e){ err('gateErr', 'Could not load names. Check your connection.'); }
+    $('gName').innerHTML = '<option value="">Choose your name</option>' + MANAGERS.map(n => '<option>' + esc(n) + '</option>').join('');
+    if (MANAGERS.includes(ls.get(K.name))) $('gName').value = ls.get(K.name);
   }
   async function signIn(key, name, quiet){
     try{
@@ -778,7 +776,7 @@
   renderCart();
   loadPeople().then(async () => {
     const k = ls.get(K.key), n = ls.get(K.name);
-    if (k && n) await signIn(k, n, true);
+    if (k && MANAGERS.includes(n)) await signIn(k, n, true);
     let t = ''; try{ t = sessionStorage.getItem('uniform_tab') || ''; }catch(e){}
     if (t && KEY){ const b = document.querySelector('#tabs button[data-tab="' + t + '"]'); if (b) b.click(); }
   });
