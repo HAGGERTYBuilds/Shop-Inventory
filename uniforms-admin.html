@@ -33,6 +33,11 @@
   .tabs .badge{display:inline-block; min-width:18px; padding:0 5px; border-radius:9px; background:var(--ink); color:var(--orange); font-size:11px; margin-left:5px; line-height:18px;}
   .tabs button.active .badge{background:rgba(0,0,0,.2); color:var(--ink);}
   .panel{display:none;} .panel.show{display:block;}
+  .brandBar{display:flex; gap:8px; align-items:center; margin:-6px 0 16px; flex-wrap:wrap;}
+  .brandBar .lbl{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-right:4px;}
+  .bTag{display:inline-block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:5px; vertical-align:middle; margin-left:6px;}
+  .bTag.Haggerty{background:rgba(246,137,34,.18); color:var(--orange);}
+  .bTag.RHINO{background:rgba(160,170,180,.18); color:#c8d0d8;}
 
   .bar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;}
   .bar .grow{flex:1 1 220px;}
@@ -125,6 +130,18 @@
   .err{background:rgba(200,60,60,.14); border:1px solid rgba(200,60,60,.5); border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px; display:none;}
   .err.show{display:block;}
 
+  .photoRow{display:flex; gap:12px; align-items:stretch;}
+  .photoPrev{width:120px; min-height:120px; border-radius:10px; border:1.5px dashed var(--gray); background:#1e1e1e center/contain no-repeat; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; flex-shrink:0;}
+  /* order-by-size sheet */
+  .osHead{display:flex; gap:14px; align-items:center; margin-bottom:14px;}
+  .osHead .ph{width:96px; height:96px; border-radius:10px; background:#1e1e1e center/contain no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--gray);}
+  .osGrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; margin-bottom:14px;}
+  .osCell{background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:8px 10px;}
+  .osCell .s{font-weight:700; font-size:16px;}
+  .osCell .h{font-size:11px; color:var(--muted); margin:2px 0 6px;}
+  .osCell .h.low{color:var(--amber);} .osCell .h.out{color:var(--danger);}
+  .osCell input{padding:8px; text-align:center; font-size:16px;}
+  .osCell.has{border-color:var(--orange);}
   /* items */
   .irow{display:flex; gap:12px; align-items:center; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:10px 14px; margin-bottom:8px;}
   .irow .i{flex:1; min-width:0;} .irow .n{font-weight:700;} .irow .m{color:var(--muted); font-size:12px;}
@@ -137,10 +154,11 @@
   /* QR */
   .qrwrap{display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start;}
   .sign{background:#fff; color:#1b1b1b; border-radius:14px; padding:30px 28px; width:340px; text-align:center; border-top:14px solid var(--orange);}
-  .sign .t1{font-family:"Arial Narrow",Arial,sans-serif; font-weight:800; letter-spacing:.16em; font-size:30px;}
+  .sign .signLogo{height:44px; width:auto; margin-bottom:12px; background:#232323; padding:8px 14px; border-radius:10px; box-sizing:content-box;}
+  .sign .t1{font-family:"Arial Narrow",Arial,sans-serif; font-weight:800; letter-spacing:.12em; font-size:24px;}
   .sign .t2{font-size:16px; margin:6px 0 18px;}
-  .sign #qr{display:flex; justify-content:center;}
-  .sign #qr img,.sign #qr canvas{width:240px !important; height:240px !important;}
+  .sign .qr{display:flex; justify-content:center;}
+  .sign .qr img,.sign .qr canvas{width:240px !important; height:240px !important;}
   .sign .t3{font-size:13px; color:#555; margin-top:16px;}
   .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--orange); color:var(--ink); font-weight:700; padding:12px 18px; border-radius:12px; opacity:0; pointer-events:none; transition:.25s; font-size:14px; z-index:90;}
   .toast.show{opacity:1; transform:translateX(-50%);}
@@ -148,10 +166,11 @@
   @media (max-width:600px){ .row2{grid-template-columns:1fr;} .cartBtn{right:12px; bottom:12px;} }
   @media print{
     body{background:#fff;} body *{visibility:hidden;}
-    .sign, .sign *{visibility:visible;}
+    body[data-print="Haggerty"] #sign-Haggerty, body[data-print="Haggerty"] #sign-Haggerty *,
+    body[data-print="RHINO"] #sign-RHINO, body[data-print="RHINO"] #sign-RHINO *{visibility:visible;}
     .sign{position:absolute; left:50%; top:30px; transform:translateX(-50%); width:480px; border:2px solid #ddd; border-top:18px solid var(--orange);}
-    .sign #qr img,.sign #qr canvas{width:340px !important; height:340px !important;}
-    .sign .t1{font-size:40px;}
+    .sign .qr img,.sign .qr canvas{width:340px !important; height:340px !important;}
+    .sign .t1{font-size:34px;}
   }
 </style>
 </head>
@@ -185,6 +204,12 @@
       <button data-tab="items">Items</button>
       <button data-tab="qr">Door QR</button>
     </nav>
+    <div class="brandBar" id="brandBar">
+      <span class="lbl">Show</span>
+      <button class="chip" type="button" data-b="">All</button>
+      <button class="chip" type="button" data-b="Haggerty">Haggerty</button>
+      <button class="chip" type="button" data-b="RHINO">RHINO</button>
+    </div>
 
     <div class="panel show" id="p-stock">
       <div class="bar" id="stats"></div>
@@ -212,17 +237,27 @@
     </div>
 
     <div class="panel" id="p-qr">
+      <p style="margin-top:0">One sign per brand. Scanning opens the uniform page already switched to that brand, using the same phone sign-in as Shop Tools. Crew can still flip between brands on the page.</p>
       <div class="qrwrap">
-        <div class="sign">
-          <div class="t1">UNIFORMS</div>
-          <div class="t2">Scan to grab shirts, hoodies &amp; gear</div>
-          <div id="qr"></div>
-          <div class="t3">Pick your size. It's logged to your name.</div>
+        <div>
+          <div class="sign" id="sign-Haggerty">
+            <img class="signLogo" data-logo="h" alt="">
+            <div class="t1">HAGGERTY UNIFORMS</div>
+            <div class="t2">Scan to grab shirts, hoodies &amp; gear</div>
+            <div class="qr" data-b="Haggerty"></div>
+            <div class="t3">Pick your size. It's logged to your name.</div>
+          </div>
+          <div class="bar" style="margin-top:10px"><button class="btn" type="button" data-print="Haggerty">Print Haggerty sign</button><button class="btn ghost" type="button" data-copy="Haggerty">Copy link</button></div>
         </div>
-        <div style="flex:1; min-width:240px">
-          <p>Print this and post it at the door. Scanning opens the uniform page on the crew member's phone, using the same phone sign-in as Shop Tools.</p>
-          <div class="f"><label>Link in the code</label><input id="qrUrl" readonly></div>
-          <div class="bar"><button class="btn" type="button" onclick="window.print()">Print sign</button><button class="btn ghost" type="button" id="copyUrl">Copy link</button></div>
+        <div>
+          <div class="sign" id="sign-RHINO">
+            <img class="signLogo" data-logo="r" alt="">
+            <div class="t1">RHINO UNIFORMS</div>
+            <div class="t2">Scan to grab shirts, hoodies &amp; gear</div>
+            <div class="qr" data-b="RHINO"></div>
+            <div class="t3">Pick your size. It's logged to your name.</div>
+          </div>
+          <div class="bar" style="margin-top:10px"><button class="btn" type="button" data-print="RHINO">Print RHINO sign</button><button class="btn ghost" type="button" data-copy="RHINO">Copy link</button></div>
         </div>
       </div>
     </div>
@@ -268,7 +303,10 @@
 <div class="modal" id="mItem"><div class="mbox">
   <h2 id="iTitle">New item</h2><div class="sub" id="iSub"></div>
   <div class="err" id="iErr"></div>
-  <div class="f"><label for="iName">Name</label><input id="iName" placeholder="Crew T-Shirt"></div>
+  <div class="row2">
+    <div class="f"><label for="iBrand">Brand</label><select id="iBrand"><option>Haggerty</option><option>RHINO</option></select></div>
+    <div class="f"><label for="iName">Name</label><input id="iName" placeholder="Crew T-Shirt"></div>
+  </div>
   <div class="row2">
     <div class="f"><label for="iCat">Category</label><input id="iCat" list="cats" placeholder="Shirts"><datalist id="cats"></datalist></div>
     <div class="f"><label for="iColor">Color</label><input id="iColor" placeholder="Safety orange"></div>
@@ -284,19 +322,35 @@
   </div>
   <div class="row2">
     <div class="f"><label for="iVendor">Supplier</label><input id="iVendor"></div>
-    <div class="f"><label for="iSku">Supplier item #</label><input id="iSku"></div>
+    <div class="f"><label for="iSku">Model #</label><input id="iSku" placeholder="e.g. PC54"></div>
   </div>
   <div class="row2">
     <div class="f"><label for="iPrice">Price each ($)</label><input id="iPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
     <div class="f"><label for="iSort">Sort order</label><input id="iSort" type="number" inputmode="numeric" placeholder="100"></div>
   </div>
-  <div class="f"><label for="iPhoto">Photo link (optional)</label><input id="iPhoto" placeholder="https://…/shirt.jpg"></div>
+  <div class="f"><label>Photo</label>
+    <div class="photoRow">
+      <div class="photoPrev" id="iPrev"></div>
+      <div style="flex:1; display:flex; flex-direction:column; gap:8px">
+        <label class="btn ghost sm" style="text-transform:none; letter-spacing:0; color:var(--paper); margin:0; text-align:center; cursor:pointer">Upload screenshot<input id="iFile" type="file" accept="image/*" hidden></label>
+        <button class="btn ghost sm" type="button" id="iClearPhoto">Remove photo</button>
+        <input id="iPhoto" placeholder="…or paste an https:// image link">
+      </div>
+    </div>
+  </div>
   <div class="f"><label for="iDesc">Description</label><input id="iDesc"></div>
   <div class="mact">
     <button class="btn danger" type="button" id="iRemove" hidden>Remove from catalogue</button>
     <span style="flex:1"></span>
     <button class="btn ghost" type="button" data-close>Cancel</button><button class="btn" type="button" id="iSave">Save</button>
   </div>
+</div></div>
+
+<div class="modal" id="mOrder"><div class="mbox">
+  <div class="osHead"><div class="ph" id="osPh"></div><div><h2 id="osTitle"></h2><div class="sub" id="osSub" style="margin:0"></div></div></div>
+  <label>How many of each size?</label>
+  <div class="osGrid" id="osGrid"></div>
+  <div class="mact"><span class="muted" id="osTotal" style="margin-right:auto; align-self:center"></span><button class="btn ghost" type="button" data-close>Cancel</button><button class="btn" type="button" id="osAdd">Add to cart</button></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -319,6 +373,16 @@
   let catalog = [], orders = [], log = [];
   let cart = []; try{ cart = JSON.parse(ls.get(K.cart) || '[]') || []; }catch(e){ cart = []; }
   let catFilter = '';
+  const BRAND_KEY = 'haggerty_uniform_admin_brand';
+  let brandF = ls.get(BRAND_KEY); if (brandF !== 'Haggerty' && brandF !== 'RHINO') brandF = '';
+  const brandOf = i => (i && i.brand) || 'Haggerty';
+  const inBrand = i => !brandF || brandOf(i) === brandF;
+  const tag = b => '<span class="bTag ' + esc(b || 'Haggerty') + '">' + esc(b || 'Haggerty') + '</span>';
+  function paintBrandBar(){ document.querySelectorAll('#brandBar .chip').forEach(c => c.classList.toggle('on', c.dataset.b === brandF)); }
+  document.querySelectorAll('#brandBar .chip').forEach(c => c.addEventListener('click', () => {
+    brandF = c.dataset.b; ls.set(BRAND_KEY, brandF || null); catFilter = ''; paintBrandBar(); renderStock(); renderShop(); renderItems();
+  }));
+  paintBrandBar();
 
   async function rpc(fn, body){
     const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, { method:'POST', headers:H, body: JSON.stringify(body || {}) });
@@ -389,7 +453,8 @@
   /* ---------- stock ---------- */
   function renderStock(){
     let units = 0, low = 0, out = 0;
-    catalog.forEach(i => i.sizes.forEach(s => { units += s.quantity; if (s.quantity === 0) out++; else if (s.quantity <= s.reorder_threshold) low++; }));
+    const list = catalog.filter(inBrand);
+    list.forEach(i => i.sizes.forEach(s => { units += s.quantity; if (s.quantity === 0) out++; else if (s.quantity <= s.reorder_threshold) low++; }));
     const open = orders.filter(o => o.status === 'Placed').length;
     $('stats').innerHTML =
       '<div class="stat"><b>' + units + '</b><span>Units on hand</span></div>' +
@@ -397,14 +462,14 @@
       '<div class="stat ' + (out ? 'bad' : '') + '"><b>' + out + '</b><span>Sizes out</span></div>' +
       '<div class="stat"><b>' + open + '</b><span>Open orders</span></div>';
     $('openBadge').hidden = !open; $('openBadge').textContent = open;
-    $('stockList').innerHTML = catalog.length ? catalog.map(i =>
-      '<div class="sitem"><h3>' + esc(i.item_name) + '</h3><div class="sub">' + esc([i.category, i.color, i.vendor].filter(Boolean).join(' · ')) + '</div><div class="cells">' +
+    $('stockList').innerHTML = list.length ? list.map(i =>
+      '<div class="sitem"><h3>' + esc(i.item_name) + tag(i.brand) + '</h3><div class="sub">' + esc([i.category, i.color, i.vendor].filter(Boolean).join(' · ')) + '</div><div class="cells">' +
       i.sizes.map(s => {
         const oo = (i.on_order || {})[s.size];
         const cls = s.quantity === 0 ? ' out' : (s.quantity <= s.reorder_threshold ? ' low' : '');
         return '<button class="cell' + cls + '" type="button" data-code="' + esc(i.item_code) + '" data-size="' + esc(s.size) + '"><div class="s">' + esc(s.size) + '</div><div class="q">' + s.quantity + '</div>'
           + '<div class="t">low ≤ ' + s.reorder_threshold + '</div>' + (oo ? '<div class="oo">+' + oo + ' on order</div>' : '') + '</button>';
-      }).join('') + '</div></div>').join('') : '<div class="empty">No items yet. Add some on the Items tab.</div>';
+      }).join('') + '</div></div>').join('') : '<div class="empty">No ' + (brandF ? esc(brandF) + ' ' : '') + 'items yet. Add some on the Items tab.</div>';
     $('stockList').querySelectorAll('.cell').forEach(c => c.addEventListener('click', () => openStock(c.dataset.code, c.dataset.size)));
   }
   let editing = null;
@@ -427,7 +492,7 @@
   });
   $('addLow').addEventListener('click', () => {
     let added = 0;
-    catalog.forEach(i => i.sizes.forEach(s => {
+    catalog.filter(inBrand).forEach(i => i.sizes.forEach(s => {
       const oo = (i.on_order || {})[s.size] || 0;
       const target = Math.max(s.reorder_threshold * 2, s.reorder_threshold + 1);
       const need = target - s.quantity - oo - cartQty(i.item_code, s.size);
@@ -438,27 +503,56 @@
 
   /* ---------- catalogue ---------- */
   function renderShop(){
-    const cats = [...new Set(catalog.map(i => i.category))];
+    const cats = [...new Set(catalog.filter(inBrand).map(i => i.category))];
     $('chips').innerHTML = ['', ...cats].map(c => '<button type="button" class="chip' + (catFilter === c ? ' on' : '') + '" data-c="' + esc(c) + '">' + (c ? esc(c) : 'All') + '</button>').join('');
     $('chips').querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { catFilter = b.dataset.c; renderShop(); }));
     $('cats').innerHTML = cats.map(c => '<option value="' + esc(c) + '">').join('');
     const q = $('search').value.trim().toLowerCase();
-    const list = catalog.filter(i => (!catFilter || i.category === catFilter) &&
-      (!q || [i.item_name, i.color, i.vendor, i.vendor_sku, i.category].join(' ').toLowerCase().includes(q)));
+    const list = catalog.filter(i => inBrand(i) && (!catFilter || i.category === catFilter) &&
+      (!q || [i.item_name, i.brand, i.color, i.vendor, i.vendor_sku, i.category].join(' ').toLowerCase().includes(q)));
     $('shop').innerHTML = list.length ? list.map(i =>
       '<div class="prod"><div class="ph">' + (i.photo_url ? '<img src="' + esc(i.photo_url) + '" alt="" loading="lazy">' : SHIRT) + '</div><div class="bd">'
-      + '<div><div class="nm">' + esc(i.item_name) + '</div><div class="mt">' + esc([i.color, i.vendor, i.vendor_sku ? '#' + i.vendor_sku : ''].filter(Boolean).join(' · ')) + '</div></div>'
+      + '<div><div class="nm">' + esc(i.item_name) + tag(i.brand) + '</div><div class="mt">' + esc([i.vendor_sku ? 'Model # ' + i.vendor_sku : '', i.color, i.vendor].filter(Boolean).join(' · ')) + '</div></div>'
       + (i.unit_price != null ? '<div class="pr">' + money(i.unit_price) + ' each</div>' : '')
-      + '<div class="buy"><select aria-label="Size">' + i.sizes.map(s => '<option value="' + esc(s.size) + '">' + esc(s.size) + ' · ' + s.quantity + ' in stock</option>').join('') + '</select>'
-      + '<input type="number" min="1" value="1" inputmode="numeric" aria-label="Quantity"></div>'
-      + '<button class="btn" type="button" data-code="' + esc(i.item_code) + '">Add to cart</button></div></div>').join('')
+      + '<div class="mt">' + i.sizes.map(s => esc(s.size) + ': ' + s.quantity).join(' · ') + '</div>'
+      + '<button class="btn" type="button" data-code="' + esc(i.item_code) + '" style="margin-top:auto">Choose sizes &amp; quantities</button></div></div>').join('')
       : '<div class="empty">Nothing matches.</div>';
-    $('shop').querySelectorAll('.prod .btn').forEach(b => b.addEventListener('click', () => {
-      const card = b.closest('.prod'); const size = card.querySelector('select').value; const n = parseInt(card.querySelector('input').value, 10);
-      if (!(n > 0)) return toast('Enter a quantity');
-      addToCart(b.dataset.code, size, n); card.querySelector('input').value = 1;
-    }));
+    $('shop').querySelectorAll('.prod .btn').forEach(b => b.addEventListener('click', () => openOrderSheet(b.dataset.code)));
+    $('shop').querySelectorAll('.prod .ph').forEach((p, n) => { p.style.cursor = 'pointer'; p.addEventListener('click', () => openOrderSheet(list[n].item_code)); });
   }
+
+  /* order-by-size sheet */
+  let osItem = null;
+  function openOrderSheet(code){
+    const i = catalog.find(x => x.item_code === code); if (!i) return;
+    osItem = i;
+    $('osTitle').textContent = i.item_name;
+    $('osSub').innerHTML = tag(i.brand) + ' ' + esc([i.vendor_sku ? 'Model # ' + i.vendor_sku : 'No model # yet', i.color, i.vendor, i.unit_price != null ? money(i.unit_price) + ' each' : ''].filter(Boolean).join(' · '));
+    $('osPh').style.backgroundImage = i.photo_url ? 'url("' + i.photo_url.replace(/"/g, '%22') + '")' : '';
+    $('osPh').innerHTML = i.photo_url ? '' : SHIRT;
+    $('osGrid').innerHTML = i.sizes.map(s => {
+      const oo = (i.on_order || {})[s.size] || 0;
+      const cls = s.quantity === 0 ? ' out' : (s.quantity <= s.reorder_threshold ? ' low' : '');
+      return '<div class="osCell"><div class="s">' + esc(s.size) + '</div><div class="h' + cls + '">' + s.quantity + ' on shelf' + (oo ? ' · +' + oo + ' ordered' : '') + '</div>'
+        + '<input type="number" min="0" inputmode="numeric" placeholder="0" data-size="' + esc(s.size) + '" aria-label="Quantity for size ' + esc(s.size) + '"></div>';
+    }).join('');
+    $('osGrid').querySelectorAll('input').forEach(inp => inp.addEventListener('input', osTotal));
+    osTotal();
+    openModal('mOrder'); setTimeout(() => { const f = $('osGrid').querySelector('input'); if (f) f.focus(); }, 50);
+  }
+  function osTotal(){
+    let n = 0;
+    $('osGrid').querySelectorAll('input').forEach(inp => { const v = parseInt(inp.value, 10) || 0; n += Math.max(0, v); inp.closest('.osCell').classList.toggle('has', v > 0); });
+    $('osTotal').textContent = n ? n + ' total' + (osItem && osItem.unit_price != null ? ' · ' + money(n * osItem.unit_price) : '') : '';
+    $('osAdd').disabled = !n;
+  }
+  $('osAdd').addEventListener('click', () => {
+    let lines = 0, units = 0;
+    $('osGrid').querySelectorAll('input').forEach(inp => { const v = parseInt(inp.value, 10) || 0; if (v > 0){ addToCart(osItem.item_code, inp.dataset.size, v, true); lines++; units += v; } });
+    closeModals();
+    if (units) toast('Added ' + units + ' × ' + osItem.item_name + ' (' + lines + ' size' + (lines > 1 ? 's' : '') + ')');
+  });
+  $('mOrder').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('osAdd').disabled) $('osAdd').click(); });
   $('search').addEventListener('input', renderShop);
 
   /* ---------- cart ---------- */
@@ -477,7 +571,7 @@
     $('cartBody').innerHTML = cart.length ? cart.map((c, idx) => {
       const i = catalog.find(x => x.item_code === c.item_code) || { item_name: c.item_code };
       if (i.unit_price != null) total += i.unit_price * c.quantity; else priced = false;
-      return '<div class="cline"><div><div class="n">' + esc(i.item_name) + ' · ' + esc(c.size) + '</div><div class="m">' + esc([i.color, i.vendor].filter(Boolean).join(' · ')) + (i.unit_price != null ? ' · ' + money(i.unit_price) + ' ea' : '') + '</div></div>'
+      return '<div class="cline"><div><div class="n">' + esc(i.item_name) + ' · ' + esc(c.size) + tag(i.brand) + '</div><div class="m">' + esc([i.color, i.vendor].filter(Boolean).join(' · ')) + (i.unit_price != null ? ' · ' + money(i.unit_price) + ' ea' : '') + '</div></div>'
         + '<input type="number" min="1" value="' + c.quantity + '" data-i="' + idx + '" aria-label="Quantity"><button class="x" type="button" data-rm="' + idx + '" aria-label="Remove">×</button></div>';
     }).join('') : '<div class="empty">Cart is empty. Add items from the Catalogue tab, or use “Add low sizes to cart” on the Stock tab.</div>';
     $('cartBody').querySelectorAll('input').forEach(inp => inp.addEventListener('change', () => {
@@ -512,21 +606,24 @@
   /* ---------- order email ---------- */
   function buildEmail(o){
     const byVendor = {};
-    o.lines.forEach(l => (byVendor[l.vendor || ''] = byVendor[l.vendor || ''] || []).push(l));
-    let body = 'Hello,\n\nPlease process the following uniform order for Haggerty.\n\nOrder #: ' + o.order_code + '\nDate: ' + new Date(o.created_at).toLocaleDateString() + '\n';
+    o.lines.forEach(l => { const k = (l.brand || 'Haggerty') + ' uniforms' + (l.vendor ? ' · ' + l.vendor : ''); (byVendor[k] = byVendor[k] || []).push(l); });
+    const brands = [...new Set(o.lines.map(l => l.brand || 'Haggerty'))];
+    const who = brands.length === 1 && brands[0] === 'RHINO' ? 'RHINO Restores' : brands.length > 1 ? 'Haggerty and RHINO Restores' : 'Haggerty';
+    const vendors = [...new Set(o.lines.map(l => l.vendor).filter(Boolean))];
+    let body = 'Hello' + (vendors.length === 1 ? ' ' + vendors[0] + ' team' : '') + ',\n\nPlease process the following uniform order for ' + who + '.\n\nOrder #: ' + o.order_code + '\nDate: ' + new Date(o.created_at).toLocaleDateString() + '\n';
     let units = 0, total = 0, priced = true;
     Object.keys(byVendor).forEach(v => {
-      body += '\n' + (Object.keys(byVendor).length > 1 || v ? (v || 'Other') + '\n' : '');
+      body += '\n' + v + '\n';
       byVendor[v].forEach(l => {
         units += l.quantity; if (l.unit_price != null) total += l.unit_price * l.quantity; else priced = false;
-        body += '  • ' + l.item_name + (l.color ? ' (' + l.color + ')' : '') + (l.vendor_sku ? ' | Item # ' + l.vendor_sku : '') + ' | Size ' + l.size + ' | Qty ' + l.quantity + (l.unit_price != null ? ' @ ' + money(l.unit_price) : '') + '\n';
+        body += '  • ' + (l.vendor_sku ? 'Model # ' + l.vendor_sku + ' | ' : '') + l.item_name + (l.color ? ' (' + l.color + ')' : '') + ' | Size ' + l.size + ' | Qty ' + l.quantity + (l.unit_price != null ? ' @ ' + money(l.unit_price) : '') + '\n';
       });
     });
     body += '\nTotal units: ' + units + '\n';
     if (total) body += 'Estimated total: ' + money(total) + (priced ? '' : ' (some items unpriced)') + '\n';
     if (o.notes) body += '\nNotes: ' + o.notes + '\n';
-    body += '\nPlease confirm the order and expected ship date.\n\nThank you,\n' + (o.placed_by || ME) + '\nHaggerty';
-    return { to: o.vendor_email || '', subject: 'Uniform order ' + o.order_code + ' · Haggerty', body };
+    body += '\nPlease confirm the order and expected ship date.\n\nThank you,\n' + (o.placed_by || ME) + '\n' + who;
+    return { to: o.vendor_email || '', subject: 'Uniform order ' + o.order_code + ' · ' + who, body };
   }
   function showEmail(o){
     const e = buildEmail(o);
@@ -556,7 +653,7 @@
         + (o.status === 'Placed' ? '<button class="btn green sm" type="button" data-recv="' + esc(o.order_code) + '">Mark received</button><button class="btn danger sm" type="button" data-cancel="' + esc(o.order_code) + '">Cancel</button>' : '')
         + '</span></div>'
         + '<div class="tblwrap"><table><thead><tr><th>Item</th><th>Size</th><th class="num">Qty</th><th class="num">Each</th></tr></thead><tbody>'
-        + o.lines.map(l => '<tr><td>' + esc(l.item_name) + (l.color ? ' <span class="muted">' + esc(l.color) + '</span>' : '') + '</td><td>' + esc(l.size) + '</td><td class="num">' + l.quantity + '</td><td class="num">' + money(l.unit_price) + '</td></tr>').join('')
+        + o.lines.map(l => '<tr><td>' + esc(l.item_name) + tag(l.brand) + (l.color ? ' <span class="muted">' + esc(l.color) + '</span>' : '') + '</td><td>' + esc(l.size) + '</td><td class="num">' + l.quantity + '</td><td class="num">' + money(l.unit_price) + '</td></tr>').join('')
         + '</tbody></table></div><div class="muted" style="font-size:13px;margin-top:8px">' + units + ' units' + (total ? ' · est. ' + money(total) : '')
         + (o.notes ? ' · Notes: ' + esc(o.notes) : '') + (o.received_at ? ' · Received ' + fmtDate(o.received_at) + (o.received_by ? ' by ' + esc(o.received_by) : '') : '') + '</div></div>';
     }).join('') : '<div class="empty">No orders yet. Build one from the Catalogue tab.</div>';
@@ -577,7 +674,7 @@
 
   /* ---------- activity ---------- */
   function renderLog(){
-    $('logBody').innerHTML = log.length ? log.map(g => '<tr><td class="muted">' + fmtDate(g.logged_at) + '</td><td>' + esc(g.person_name || '') + '</td><td>' + esc(g.action) + '</td><td>' + esc(g.item_name) + '</td><td>' + esc(g.size) + '</td>'
+    $('logBody').innerHTML = log.length ? log.map(g => '<tr><td class="muted">' + fmtDate(g.logged_at) + '</td><td>' + esc(g.person_name || '') + '</td><td>' + esc(g.action) + '</td><td>' + esc(g.item_name) + (g.brand ? tag(g.brand) : '') + '</td><td>' + esc(g.size) + '</td>'
       + '<td class="num ' + (g.quantity_change < 0 ? 'neg' : 'pos') + '">' + (g.quantity_change > 0 ? '+' : '') + g.quantity_change + '</td><td class="num">' + (g.quantity_after == null ? '' : g.quantity_after) + '</td>'
       + '<td class="muted">' + esc([g.order_code, g.notes].filter(Boolean).join(' · ')) + '</td></tr>').join('')
       : '<tr><td colspan="8" class="empty">No activity yet.</td></tr>';
@@ -586,7 +683,7 @@
   /* ---------- items ---------- */
   let editCode = '';
   function renderItems(){
-    $('itemList').innerHTML = catalog.map(i => '<div class="irow"><div class="i"><div class="n">' + esc(i.item_name) + ' <span class="muted" style="font-weight:400">' + esc(i.item_code) + '</span></div>'
+    $('itemList').innerHTML = catalog.filter(inBrand).map(i => '<div class="irow"><div class="i"><div class="n">' + esc(i.item_name) + tag(i.brand) + ' <span class="muted" style="font-weight:400">' + esc(i.item_code) + '</span></div>'
       + '<div class="m">' + esc([i.category, i.color, i.sizes.map(s => s.size).join(', '), i.vendor, i.unit_price != null ? money(i.unit_price) : ''].filter(Boolean).join(' · ')) + '</div></div>'
       + '<button class="btn ghost sm" type="button" data-edit="' + esc(i.item_code) + '">Edit</button></div>').join('') || '<div class="empty">No items yet.</div>';
     $('itemList').querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openItem(b.dataset.edit)));
@@ -596,21 +693,56 @@
     editCode = i ? i.item_code : '';
     $('iTitle').textContent = i ? 'Edit ' + i.item_name : 'New item';
     $('iSub').textContent = i ? i.item_code : 'Shows on the door page and in the restock catalogue.';
+    $('iBrand').value = i ? brandOf(i) : (brandF || 'Haggerty');
     $('iName').value = i ? i.item_name : ''; $('iCat').value = i ? i.category : ''; $('iColor').value = i ? (i.color || '') : '';
     $('iSizes').value = i ? i.sizes.map(s => s.size).join(', ') : 'S, M, L, XL, 2XL, 3XL';
-    $('iVendor').value = i ? (i.vendor || '') : ''; $('iSku').value = i ? (i.vendor_sku || '') : '';
+    $('iVendor').value = i ? (i.vendor || '') : 'Creative Vision Printing'; $('iSku').value = i ? (i.vendor_sku || '') : '';
     $('iPrice').value = i && i.unit_price != null ? i.unit_price : ''; $('iSort').value = i ? i.sort : '';
-    $('iPhoto').value = i ? (i.photo_url || '') : ''; $('iDesc').value = i ? (i.description || '') : '';
+    photoData = i && i.photo_url && i.photo_url.startsWith('data:') ? i.photo_url : '';
+    $('iPhoto').value = i && i.photo_url && !photoData ? i.photo_url : ''; $('iDesc').value = i ? (i.description || '') : '';
+    $('iFile').value = ''; paintPhoto();
     $('iRemove').hidden = !i; err('iErr', '');
     openModal('mItem'); setTimeout(() => $('iName').focus(), 50);
   }
   document.querySelectorAll('[data-sizes]').forEach(b => b.addEventListener('click', () => { $('iSizes').value = b.dataset.sizes; }));
   $('newItem').addEventListener('click', () => openItem(''));
+  /* photo: uploaded screenshots are shrunk to max 600px and stored with the item */
+  let photoData = '';
+  function paintPhoto(){
+    const src = photoData || ($('iPhoto').value.trim().startsWith('https://') ? $('iPhoto').value.trim() : '');
+    $('iPrev').style.backgroundImage = src ? 'url("' + src.replace(/"/g, '%22') + '")' : '';
+    $('iPrev').textContent = src ? '' : 'No photo';
+  }
+  function shrinkImage(file){
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => {
+        const max = 600, k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        let q = 0.82, out = c.toDataURL('image/jpeg', q);
+        while (out.length > 380000 && q > 0.4){ q -= 0.1; out = c.toDataURL('image/jpeg', q); }
+        out.length > 380000 ? reject(new Error('That image is too large. Try a smaller screenshot.')) : resolve(out);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image.')); };
+      img.src = url;
+    });
+  }
+  $('iFile').addEventListener('change', async () => {
+    const f = $('iFile').files[0]; if (!f) return;
+    err('iErr', '');
+    try{ photoData = await shrinkImage(f); $('iPhoto').value = ''; paintPhoto(); }catch(e){ err('iErr', e.message); }
+  });
+  $('iClearPhoto').addEventListener('click', () => { photoData = ''; $('iPhoto').value = ''; $('iFile').value = ''; paintPhoto(); });
+  $('iPhoto').addEventListener('input', () => { if ($('iPhoto').value.trim()) photoData = ''; paintPhoto(); });
+
   async function saveItem(extra){
     err('iErr', '');
-    const photo = $('iPhoto').value.trim();
-    if (photo && !/^https:\/\//i.test(photo)) return err('iErr', 'Photo link must start with https://');
-    const item = { item_code: editCode, item_name: $('iName').value, category: $('iCat').value, color: $('iColor').value,
+    const link = $('iPhoto').value.trim();
+    if (link && !/^https:\/\/[^\s"'<>]+$/i.test(link)) return err('iErr', 'Photo link must start with https://');
+    const photo = photoData || link;
+    const item = { item_code: editCode, brand: $('iBrand').value, item_name: $('iName').value, category: $('iCat').value, color: $('iColor').value,
       sizes: $('iSizes').value.split(',').map(s => s.trim()).filter(Boolean), vendor: $('iVendor').value, vendor_sku: $('iSku').value,
       unit_price: $('iPrice').value, sort: $('iSort').value, photo_url: photo, description: $('iDesc').value, ...(extra || {}) };
     $('iSave').disabled = true;
@@ -625,13 +757,20 @@
 
   /* ---------- QR ---------- */
   let qrDone = false;
+  const doorUrl = b => DOOR_URL + '?brand=' + (b === 'RHINO' ? 'rhino' : 'haggerty');
+  document.querySelector('.sign [data-logo="h"]').src = document.querySelector('.mark').src;
+  document.querySelector('.sign [data-logo="r"]').src = document.querySelector('.mark-rhino').src;
   function renderQR(){
-    $('qrUrl').value = DOOR_URL;
     if (qrDone || !window.QRCode) return;
-    new QRCode($('qr'), { text: DOOR_URL, width: 480, height: 480, colorDark: '#1b1b1b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    document.querySelectorAll('.sign .qr').forEach(el => new QRCode(el, { text: doorUrl(el.dataset.b), width: 480, height: 480, colorDark: '#1b1b1b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }));
     qrDone = true;
   }
-  $('copyUrl').addEventListener('click', async () => { try{ await navigator.clipboard.writeText(DOOR_URL); toast('Link copied'); }catch(e){ $('qrUrl').select(); } });
+  document.querySelectorAll('[data-print]').forEach(b => b.addEventListener('click', () => { document.body.dataset.print = b.dataset.print; window.print(); }));
+  window.addEventListener('afterprint', () => { delete document.body.dataset.print; });
+  document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => {
+    const u = doorUrl(b.dataset.copy);
+    try{ await navigator.clipboard.writeText(u); toast('Link copied'); }catch(e){ prompt('Copy this link:', u); }
+  }));
 
   /* ---------- start ---------- */
   renderCart();
