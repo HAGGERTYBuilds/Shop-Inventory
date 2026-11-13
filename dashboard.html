@@ -147,6 +147,25 @@
     </div>
   </main>
   <div class="toast" id="toast"></div>
+  <div class="modal" id="textModal">
+    <div class="box">
+      <h3>Text a reminder</h3>
+      <p class="who" id="tmWho"></p>
+      <div id="tmPhoneRow">
+        <label for="tmPhone">Cell number</label>
+        <input id="tmPhone" type="tel" inputmode="tel" placeholder="(209) 555-1234" autocomplete="off">
+        <p class="adminNote" id="tmPhoneNote" style="margin-top:6px;">Saved for next time. Only you can see it.</p>
+      </div>
+      <p class="adminNote" id="tmSaved" style="display:none;"></p>
+      <label>Message</label>
+      <div id="tmBody" style="background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; font-size:14px; line-height:1.45;"></div>
+      <p class="adminNote">If they reply <b>YES</b>, the due date moves to 5 days from today and they get a text back. If they reply <b>NO</b>, they're told to bring it back today and get one more reminder at 3:30 PM if it's still out.</p>
+      <div class="buttons">
+        <button type="button" class="go" id="tmGo">Send text</button>
+        <button type="button" class="cancel" id="tmCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
   <div class="modal" id="editModal">
     <div class="box">
       <h3 id="emTitle">Edit checkout</h3>
@@ -823,14 +842,17 @@
         grouped[c.person].push(c);
       });
       const sortedPeople = Object.keys(grouped).sort((a, b) => grouped[b].length - grouped[a].length);
-      let html = '<div class="tableWrap"><table><thead><tr><th>Person</th><th>Item</th><th>Category</th><th>Where</th><th>Due back</th><th>Late</th></tr></thead><tbody>';
+      if (ADMIN) body.appendChild(fromHtml('<p class="adminNote" style="margin:0 0 14px;">Tap <b>Text</b> to send that person a reminder. They can reply YES for 5 more days or NO to bring it back today.</p>'));
+      let html = '<div class="tableWrap"><table><thead><tr><th>Person</th><th>Item</th><th>Category</th><th>Where</th><th>Due back</th><th>Late</th>' + (ADMIN ? '<th>Reminder</th>' : '') + '</tr></thead><tbody>';
       sortedPeople.forEach(person => {
         const items = grouped[person];
         items.forEach((c, idx) => {
           const personCell = idx === 0
             ? '<b>' + esc(person) + '</b> <span style="color:var(--muted); font-weight:400; font-size:12px;">(' + items.length + ')</span>'
             : '';
-          html += '<tr class="overdue"><td>' + personCell + '</td><td>' + esc(c.item) + '</td><td>' + esc(c.category) + '</td><td>' + esc(c.destination || '-') + '</td><td>' + esc(c.dueBack) + '</td><td><span class="badge b-late">' + c.daysLate + ' day' + (c.daysLate === 1 ? '' : 's') + '</span></td></tr>';
+          html += '<tr class="overdue"><td>' + personCell + '</td><td>' + esc(c.item) + '</td><td>' + esc(c.category) + '</td><td>' + esc(c.destination || '-') + '</td><td>' + esc(c.dueBack) + '</td><td><span class="badge b-late">' + c.daysLate + ' day' + (c.daysLate === 1 ? '' : 's') + '</span></td>'
+            + (ADMIN ? '<td style="white-space:nowrap;"><button type="button" class="editBtn textBtn" data-code="' + esc(c.checkoutId) + '">Text</button> <span class="textStatus" data-code="' + esc(c.checkoutId) + '" style="font-size:12px; color:var(--muted);"></span></td>' : '')
+            + '</tr>';
         });
       });
       html += '</tbody></table></div>';
@@ -842,7 +864,78 @@
       if (overdue.length > 12){
         body.appendChild(fromHtml('<div class="scrollHint">Scroll to see more &darr;</div>'));
       }
+      if (ADMIN){
+        body.querySelectorAll('.textBtn').forEach(b => b.addEventListener('click', () => openTextModal(overdue.find(x => x.checkoutId === b.dataset.code))));
+        loadTextStatus();
+      }
     }
+    // ---- Overdue text reminders (Twilio via n8n; replies handled in Supabase) ----
+    const TEXT_SEND_URL = 'https://haggertybuilds.app.n8n.cloud/webhook/sb-overdue-text-send';
+    let textPhones = {}, textingRow = null;
+    async function loadTextStatus(){
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_overdue_text_status', { method: 'POST', headers: SB_H, body: JSON.stringify({ p_token: ADMIN_KEY }) });
+        const d = await res.json();
+        if (!d || !d.ok) return;
+        textPhones = d.phones || {};
+        const fmt = t => new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        (d.texts || []).forEach(t => {
+          const el = document.querySelector('.textStatus[data-code="' + CSS.escape(t.code) + '"]');
+          if (!el) return;
+          let label, color = 'var(--muted)';
+          if (t.answer === 'yes') { label = 'Replied YES, +5 days'; color = '#5ec99a'; }
+          else if (t.answer === 'no') { label = 'Replied NO, returning today'; color = 'var(--orange)'; }
+          else if (t.status === 'failed') { label = 'Text failed'; color = 'var(--red)'; }
+          else if (t.status === 'queued' || t.status === 'sending') label = 'Sending…';
+          else label = 'Texted ' + fmt(t.sentAt) + ', no reply yet';
+          el.textContent = label; el.style.color = color;
+          if (t.status === 'failed' && t.error) el.title = t.error;
+        });
+      } catch(e) {}
+    }
+    function textPreview(c){
+      const first = String(c.person || '').split(' ')[0];
+      const due = c.dueBack ? new Date(c.dueBack + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
+      const item = String(c.item || '').replace(/ ×\d+$/, '');
+      return 'HAGGERTY Shop: Hi ' + first + ', the ' + item + ' you checked out was due back ' + due + '. Do you need more time? Reply YES for 5 more days, or NO if you will check it back in today. Reply STOP to opt out.';
+    }
+    function openTextModal(c){
+      if (!c) return;
+      textingRow = c;
+      document.getElementById('tmWho').textContent = c.person + ' · ' + c.item + ' · ' + c.daysLate + ' day' + (c.daysLate === 1 ? '' : 's') + ' late';
+      document.getElementById('tmBody').textContent = textPreview(c);
+      const last4 = textPhones[c.person];
+      const phoneRow = document.getElementById('tmPhoneRow'), saved = document.getElementById('tmSaved');
+      document.getElementById('tmPhone').value = '';
+      if (last4) {
+        phoneRow.style.display = 'none'; saved.style.display = 'block';
+        saved.innerHTML = 'Texting the number saved for ' + esc(c.person) + ' (ends in ' + esc(last4) + '). <a href="#" id="tmChange">Use a different number</a>';
+        document.getElementById('tmChange').addEventListener('click', (e) => { e.preventDefault(); saved.style.display = 'none'; phoneRow.style.display = 'block'; document.getElementById('tmPhone').focus(); });
+      } else { phoneRow.style.display = 'block'; saved.style.display = 'none'; }
+      const g = document.getElementById('tmGo'); g.disabled = false; g.textContent = 'Send text';
+      document.getElementById('textModal').classList.add('show');
+    }
+    document.getElementById('tmCancel').addEventListener('click', () => document.getElementById('textModal').classList.remove('show'));
+    document.getElementById('textModal').addEventListener('click', (e) => { if (e.target.id === 'textModal') document.getElementById('textModal').classList.remove('show'); });
+    document.getElementById('tmGo').addEventListener('click', async () => {
+      const c = textingRow; if (!c) return;
+      const phoneVisible = document.getElementById('tmPhoneRow').style.display !== 'none';
+      const phone = phoneVisible ? document.getElementById('tmPhone').value.trim() : '';
+      if (phoneVisible && phone.replace(/\D/g, '').length < 10) { toast('Enter a 10-digit cell number', 'bad'); return; }
+      const g = document.getElementById('tmGo'); g.disabled = true; g.textContent = 'Sending…';
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_send_overdue_text', { method: 'POST', headers: SB_H, body: JSON.stringify({ p_token: ADMIN_KEY, p_editor: EDITOR, p_checkout_code: c.checkoutId, p_phone: phone || null }) });
+        const d = await res.json();
+        if (!d || !d.ok) throw new Error((d && d.message) || 'Could not send');
+        try { fetch(TEXT_SEND_URL, { method: 'POST', mode: 'no-cors' }); } catch(e) {}
+        textPhones[d.person] = d.phoneLast4;
+        toast('Text sent to ' + d.person, 'ok');
+        document.getElementById('textModal').classList.remove('show');
+        const el = document.querySelector('.textStatus[data-code="' + CSS.escape(c.checkoutId) + '"]');
+        if (el) { el.textContent = 'Sending…'; el.style.color = 'var(--muted)'; }
+        setTimeout(loadTextStatus, 6000);
+      } catch(err) { toast(err.message, 'bad'); g.disabled = false; g.textContent = 'Send text'; }
+    });
     function renderAhrenActivity(body){
       document.getElementById('viewTitle').textContent = 'Recent Shop Activity';
       // Combine checkouts + returns from last 24h
